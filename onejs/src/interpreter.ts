@@ -1,4 +1,4 @@
-import { AST, Block, Expression, FuncDefStatement, FunctionCall, Identifier, Literal, Locateable, Statement, TypedIdentifier, TypeSpecifier } from "./ast";
+import { AST, Block, Expression, FuncDefStatement, FunctionCall, Identifier, Literal, Locateable, ReturnStatement, Statement, TypedIdentifier, TypeSpecifier } from "./ast";
 import { matchPrimitive } from "./utils";
 
 type ValueType = 'void' | 'int' |'func';
@@ -107,6 +107,7 @@ type Ctx = {
     filename: string,
     symbolTable: SymbolTable,
     returnValues: Value[],
+    shouldReturn: boolean,
 };
 
 export const evaluate = (nodes: AST, filename?: string) => {
@@ -114,6 +115,7 @@ export const evaluate = (nodes: AST, filename?: string) => {
         filename: filename ?? '<file>',
         symbolTable: new SymbolTable(builtins()),
         returnValues: [],
+        shouldReturn: false,
     }, nodes);
 }
 
@@ -125,7 +127,10 @@ const error = (ctx: Ctx, node: Locateable, msg: string) => {
 
 const statements = (ctx: Ctx, nodes: Statement[]) => {
     for (const node of nodes)
-        statement(ctx, node);
+        if (ctx.shouldReturn)
+            break;
+        else
+            statement(ctx, node);
 }
 
 const statement = (ctx: Ctx, node: Statement) => {
@@ -134,6 +139,8 @@ const statement = (ctx: Ctx, node: Statement) => {
             return block(ctx, node);
         case 'func_def_statement':
             return funcDefStatement(ctx, node);
+        case 'return_statement':
+            return returnStatement(ctx, node);
         case 'value_statement':
             return expression(ctx, node.value);
         default:
@@ -156,6 +163,12 @@ const funcDefStatement = (ctx: Ctx, node: FuncDefStatement) => {
         (ctx) => statement(ctx, node.definition.body)
     );
     ctx.symbolTable.set(node.definition.identifier.value, func);
+}
+
+const returnStatement = (ctx: Ctx, node: ReturnStatement) => {
+    const value = expression(ctx, node.value);
+    ctx.returnValues.push(value);
+    ctx.shouldReturn = true;
 }
 
 const expression = (ctx: Ctx, node: Expression): Value => {
@@ -181,9 +194,9 @@ const functionCall = (ctx: Ctx, node: FunctionCall): Value => {
     const func = expression(ctx, node.function) as FuncValue;
     if (func.type !== 'func')
         error(ctx, node, `value '${node.function}' is not call-able`);
-    if (func.arguements.length < node.arguments.length)
-        error(ctx, node, `too few arguments`);
     if (func.arguements.length > node.arguments.length)
+        error(ctx, node, `too few arguments`);
+    if (func.arguements.length < node.arguments.length)
         error(ctx, node, `too many arguments`);
     const callSymbols = new SymbolTable((func as FuncValue).definitionSymbols);
     for (const i in func.arguements)

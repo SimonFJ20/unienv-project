@@ -63,6 +63,7 @@ statements          ->  (_ statement (_nl_ statement):*):? _
 
 statement           ->  block               {% id %}
                     |   func_def_statement  {% id %}
+                    |   return_statement    {% id %}
                     |   value_statement     {% id %}
 
 block               ->  "{" statements "}"
@@ -83,6 +84,9 @@ typed_identifier    ->  %name _ type_specifier
 type_specifier      ->  ":" _ %name
     {% v => ({type: 'type_specifier', identifier: v[2], ...pos(v[0])}) %}
 
+return_statement    ->  "return" __ expression
+    {% v => ({type: 'return_statement', value: v[2], ...pos(v[0])}) %}
+
 value_statement     ->  expression
     {% v => ({type: 'value_statement', value: v[0], ...pos(v[0])}) %}
 
@@ -98,7 +102,7 @@ grouping            ->  "(" _ expression _ ")"
 function_call       ->  expression _ "(" arguments ")"
     {% v => ({type: 'function_call', function: v[0], arguments: v[3], ...pos(v[0])}) %}
 
-arguments           ->  (_ expression (_ "," _ arguments):*):? _
+arguments           ->  (_ expression (_ "," _ expression):*):? _
     {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
 
 # unary_operation     ->  unary_operators_ expression

@@ -2,7 +2,7 @@
 export type AST = Statement[]
 
 export type Statement = 
-    Block | FuncDefStatement | ValueStatement
+    Block | FuncDefStatement | ReturnStatement | ValueStatement
 
 export type Block = Locateable & {
     type: 'block',
@@ -33,6 +33,11 @@ export type TypeSpecifier = Locateable & {
     identifier: Identifier,
 }
 
+export type ReturnStatement = Locateable & {
+    type: 'return_statement',
+    value: Expression,
+}
+
 export type ValueStatement = Locateable & {
     type: 'value_statement',
     value: Expression,
@@ -44,7 +49,7 @@ export type Expression =
 export type FunctionCall = Locateable & {
     type: 'function_call',
     function: Expression,
-    arguments: Expression[]
+    arguments: Expression[],
 }
 
 // export type UnaryOperation = Locateable & {
