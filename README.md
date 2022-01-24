@@ -54,3 +54,4 @@ clear && make -B && clear && ./onejscli examples/test.one -r --ast
 - [CPU Registers x86-64 - OSDev](https://wiki.osdev.org/CPU_Registers_x86-64)
 - [X86 Assembly Documentation - zneak & HJLebbink](https://hjlebbink.github.io/x86doc/)
 - [Garbage collection - Wikipedia](https://en.wikipedia.org/wiki/Garbage_collection_(computer_science))
+- [Operator Precedence in JS - MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence)
