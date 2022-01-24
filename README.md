@@ -3,7 +3,7 @@
 
 Computer environment from scratch. One codebase. One language.
 
-## Current session useabels
+## Current session use-abels
 
 ```sh
 clear && make -B && clear && ./onejscli examples/test.one -r --ast
@@ -19,31 +19,31 @@ clear && make -B && clear && ./onejscli examples/test.one -r --ast
 
 ## TODO
 
-    - [ ] ONE
-      - [ ] ONEJS
-        - [ ] Parser
-        - [ ] Interpreter
-          - [ ] Functions
-          - [ ] Variables
-          - [ ] Math
-          - [ ] Objects
-          - [ ] Classes
-          - [ ] Imports
-          - [ ] Strings
-          - [ ] File
-          - [ ] OS features
-        - [ ] X86-64 Compiler
-          - [ ] Stack allocations
-          - [ ] Heap allocations
-      - [ ] Self hosting
-        - [ ] Lexer
-        - [ ] Parser
-        - [ ] Static analyzer
-          - [ ] Type checker
-        - [ ] Interpreter
-        - [ ] X86-64 Compiler
-        - [ ] Garbage collector
-        - [ ] Optimizations
+- [ ] ONE
+  - [ ] ONEJS
+    - [ ] Parser
+    - [ ] Interpreter
+      - [ ] Functions
+      - [ ] Variables
+      - [ ] Math
+      - [ ] Objects
+      - [ ] Classes
+      - [ ] Imports
+      - [ ] Strings
+      - [ ] File
+      - [ ] OS features
+    - [ ] X86-64 Compiler
+      - [ ] Stack allocations
+      - [ ] Heap allocations
+  - [ ] Self hosting
+    - [ ] Lexer
+    - [ ] Parser
+    - [ ] Static analyzer
+      - [ ] Type checker
+    - [ ] Interpreter
+    - [ ] X86-64 Compiler
+    - [ ] Garbage collector
+    - [ ] Optimizations
 
 ## Resources
 
