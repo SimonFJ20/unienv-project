@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+      "target": "ES2021",
+      "module": "CommonJS",
+
+      // turn these back on, when tsc being a bitch isnt a problem anymore
+      // "composite": true,
+      // "incremental": true,
+      // "tsBuildInfoFile": ".tsbuildinfo",
+
+      // "extendedDiagnostics": true,
+      "inlineSources": true,
+      "inlineSourceMap": true,
+      "lib": ["ES2021"],
+      "moduleResolution": "Node",
+      "outDir": "./dist",
+      "pretty": true,
+      "rootDir": "./src",
+      // "baseUrl": "./src",
+      "skipDefaultLibCheck": true,
+      "skipLibCheck": true,
+      "strict": true,
+      "esModuleInterop": true,
+    },
+    "include": ["./src/**/*.ts"]
+}
