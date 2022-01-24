@@ -1,14 +1,4 @@
 
+let a: int := 48
+putchar(a)
 
-func a(): void {
-    putchar('\n')
-}
-
-a()
-
-
-func test(asd: int): int {
-    return doubleIt(asd)
-}
-
-putchar(test(24))

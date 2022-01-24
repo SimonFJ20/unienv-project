@@ -63,6 +63,7 @@ statements          ->  (_ statement (_nl_ statement):*):? _
 
 statement           ->  block               {% id %}
                     |   func_def_statement  {% id %}
+                    |   let_statement       {% id %}
                     |   return_statement    {% id %}
                     |   value_statement     {% id %}
 
@@ -77,6 +78,12 @@ function_definition ->  %name _ "(" parameters ")" _ type_specifier _ statement
 
 parameters          ->  (_ typed_identifier (_ "," _ typed_identifier):*):? _
     {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
+
+let_statement       ->  "let" __ declaration
+    {% v => ({type: 'let_statement', declaration: v[2], ...pos(v[0])}) %}
+
+declaration         ->  typed_identifier (_ ":=" _ expression):?
+    {% v => ({type: 'declaration', typedIdentifier: v[0], value: v[1] ? v[1][3] : null, ...pos(v[0])}) %}
 
 typed_identifier    ->  %name _ type_specifier
     {% v => ({type: 'typed_identifier', identifier: v[0], typeSpecifier: v[4], ...pos(v[0])}) %}

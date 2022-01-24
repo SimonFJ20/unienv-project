@@ -24,7 +24,7 @@ clear && make -B && clear && ./onejscli examples/test.one -r --ast
     - [ ] Parser
     - [ ] Interpreter
       - [x] Functions
-      - [ ] Variables
+      - [x] Variables
       - [ ] Math
       - [ ] Objects
       - [ ] Classes

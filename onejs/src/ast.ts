@@ -2,7 +2,7 @@
 export type AST = Statement[]
 
 export type Statement = 
-    Block | FuncDefStatement | ReturnStatement | ValueStatement
+    Block | FuncDefStatement | LetStatement | ReturnStatement | ValueStatement
 
 export type Block = Locateable & {
     type: 'block',
@@ -20,6 +20,17 @@ export type FunctionDefinition = Locateable & {
     parameters: TypedIdentifier[],
     returnType: TypeSpecifier,
     body: Statement,
+}
+
+export type LetStatement = Locateable & {
+    type: 'let_statement',
+    declaration: Declaration,
+}
+
+export type Declaration = Locateable & {
+    type: 'declaration',
+    typedIdentifier: TypedIdentifier,
+    value: Expression | null,
 }
 
 export type TypedIdentifier = Locateable & {

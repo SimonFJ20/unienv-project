@@ -1,4 +1,4 @@
-import { AST, Block, Expression, FuncDefStatement, FunctionCall, Identifier, Literal, Locateable, ReturnStatement, Statement, TypedIdentifier, TypeSpecifier } from "./ast";
+import { AST, Block, Expression, FuncDefStatement, FunctionCall, Identifier, LetStatement, Literal, Locateable, ReturnStatement, Statement, TypedIdentifier, TypeSpecifier } from "./ast";
 import { matchPrimitive } from "./utils";
 
 type ValueType = 'void' | 'int' |'func';
@@ -27,6 +27,13 @@ class FuncValue extends Value {
     ) {
         super('func');
     }
+}
+
+const getPrimitive = (type: ValueType) => {
+    return matchPrimitive(type, null, [
+        ['void', () => new VoidValue()],
+        ['int', () => new IntValue(0)],
+    ]);
 }
 
 class SymbolTable {
@@ -91,6 +98,7 @@ const builtins = (): SymbolTable => {
         if (!value) throw new Error(`punjabi no value`);
         if (value.type !== 'int') throw new Error(`punjabi not an int`);
         process.stdout.write(String.fromCharCode((value as IntValue).value));
+        ctx.returnValues.push(new VoidValue());
     }));
 
     s.set('doubleIt', new FuncValue([param('value', 'int')], new SymbolTable(), type('int'), (ctx) => {
@@ -139,6 +147,8 @@ const statement = (ctx: Ctx, node: Statement) => {
             return block(ctx, node);
         case 'func_def_statement':
             return funcDefStatement(ctx, node);
+        case 'let_statement':
+            return letStatement(ctx, node);
         case 'return_statement':
             return returnStatement(ctx, node);
         case 'value_statement':
@@ -153,9 +163,10 @@ const block = (ctx: Ctx, node: Block) => {
 }
 
 const funcDefStatement = (ctx: Ctx, node: FuncDefStatement) => {
-    if (ctx.symbolTable.existsLocally(node.definition.identifier.value))
-        return error(ctx, node.definition.identifier,
-            `redeclaration of local function '${ctx.symbolTable.get(node.definition.identifier.value)}'`);
+    const identifier = node.definition.identifier;
+    if (ctx.symbolTable.existsLocally(identifier.value))
+        return error(ctx, identifier,
+            `redeclaration of local function '${ctx.symbolTable.get(identifier.value)}'`);
     const func = new FuncValue(
         node.definition.parameters,
         ctx.symbolTable,
@@ -163,6 +174,23 @@ const funcDefStatement = (ctx: Ctx, node: FuncDefStatement) => {
         (ctx) => statement(ctx, node.definition.body)
     );
     ctx.symbolTable.set(node.definition.identifier.value, func);
+}
+
+const letStatement = (ctx: Ctx, node: LetStatement) => {
+    const identifier = node.declaration.typedIdentifier.identifier;
+    if (ctx.symbolTable.existsLocally(identifier.value))
+        return error(ctx, identifier,
+            `redeclaration of local '${ctx.symbolTable.get(identifier.value)}'`);
+    if (node.declaration.value !== null) {
+        const value = expression(ctx, node.declaration.value);
+        ctx.symbolTable.set(identifier.value, value);
+    } else {
+        const type = node.declaration.typedIdentifier.typeSpecifier.identifier.value;
+        const valueOfType = getPrimitive(type as ValueType);
+        if (!valueOfType)
+            return error(ctx, identifier, `vague type '${type}'`);
+        ctx.symbolTable.set(identifier.value, valueOfType);
+    }
 }
 
 const returnStatement = (ctx: Ctx, node: ReturnStatement) => {
@@ -202,10 +230,7 @@ const functionCall = (ctx: Ctx, node: FunctionCall): Value => {
     for (const i in func.arguements)
         callSymbols.set(func.arguements[i].identifier.value, expression(ctx, node.arguments[i]));
     func.execute({...ctx, symbolTable: callSymbols});
-    if (func.returnValue.identifier.value === 'void')
-        return new VoidValue();
-    else
-        return ctx.returnValues.pop()!;
+    return ctx.returnValues.pop()!;
 }
 
 const identifier = (ctx: Ctx, node: Identifier): Value => {
