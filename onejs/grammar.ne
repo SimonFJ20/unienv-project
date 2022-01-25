@@ -25,20 +25,24 @@ const lexer = compile({
     lbracket:   '[',
     rbracket:   ']',
     comma:      ',',
-
-    assign:     ':=',
     
     plus:       '+',
     minus:      '-',
+    powerof:    '^^',
     multiply:   '*',
-    powerof:    '**',
     divide:     '/',
     modulus:    '%',
+
+    log_and:    '&&',
+    log_or:     '||',
 
     bit_and:    '&',
     bit_or:     '|',
     bit_xor:    '^',
     bit_not:    '~',
+    bit_rights: '>>>',
+    bit_right:  '>>',
+    bit_left:   '<<',
 
     cmp_e:      '==',
     cmp_ne:     '!=',
@@ -48,8 +52,9 @@ const lexer = compile({
     cmp_gt:     '>',
 
     log_not:    '!',
-    log_and:    '&&',
-    log_or:     '||',
+
+    infer:     ':=',
+    assign:     '=',
 
     qmark:      '?',
     colon:      ':',
@@ -82,7 +87,7 @@ parameters          ->  (_ typed_identifier (_ "," _ typed_identifier):*):? _
 let_statement       ->  "let" __ declaration
     {% v => ({type: 'let_statement', declaration: v[2], ...pos(v[0])}) %}
 
-declaration         ->  typed_identifier (_ ":=" _ expression):?
+declaration         ->  typed_identifier (_ "=" _ expression):?
     {% v => ({type: 'declaration', typedIdentifier: v[0], value: v[1] ? v[1][3] : null, ...pos(v[0])}) %}
 
 typed_identifier    ->  %name _ type_specifier
@@ -99,7 +104,14 @@ value_statement     ->  expression
 
 expression          ->  grouping            {% id %}
                     |   function_call       {% id %}
-                    # |   unary_operation     {% id %}
+                    |   unary               {% id %}
+                    |   exponentation       {% id %}
+                    |   mul_div_mod         {% id %}
+                    |   add_sub             {% id %}
+                    |   bitshift            {% id %}
+                    |   comparison          {% id %}
+                    |   bitwise             {% id %}
+                    |   logical             {% id %}
                     |   identifier          {% id %}
                     |   literal             {% id %}
 
@@ -112,13 +124,29 @@ function_call       ->  expression _ "(" arguments ")"
 arguments           ->  (_ expression (_ "," _ expression):*):? _
     {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
 
-# unary_operation     ->  unary_operators_ expression
-#     {% v => v[0] %}
+unary               ->  ("!" | "~" | "+" | "-") _ expression
+    {% v => ({type: 'unary', operator: v[0][0], value: v[2], ...pos(v[0][0])}) %}
 
-# unary_operators     ->  ("!" | "~" | "+" | "-")
-#     {% v => v[0] %}
+exponentation       ->  expression _ %powerof _ expression
+    {% v => ({type: 'exponentation', left: v[0], right: v[4], operation: v[2][0], ...pos(v[0])}) %}
 
-# exponentation       ->  expression _ "**" _ expression
+mul_div_mod         ->  expression _ ("*"|"/"|"%") _ expression
+    {% v => ({type: 'mul_div_mod', left: v[0], right: v[4], operation: v[2][0], ...pos(v[0])}) %}
+
+add_sub             ->  expression _ ("+"|"-") _ expression
+    {% v => ({type: 'add_sub', left: v[0], right: v[4], operation: v[2][0], ...pos(v[0])}) %}
+
+bitshift            ->  expression _ (">>>"|">>"|"<<") _ expression
+    {% v => ({type: 'bitshift', left: v[0], right: v[4], operation: v[2][0], ...pos(v[0])}) %}
+
+comparison          ->  expression _ ("<"|">"|"<="|">="|"=="|"!=") _ expression
+    {% v => ({type: 'comparison', left: v[0], right: v[4], operation: v[2][0], ...pos(v[0])}) %}
+
+bitwise             ->  expression _ ("&"|"^"|"|") _ expression
+    {% v => ({type: 'bitwise', left: v[0], right: v[4], operation: v[2][0], ...pos(v[0])}) %}
+
+logical             ->  expression _ ("&&"|"||") _ expression
+    {% v => ({type: 'logical', left: v[0], right: v[4], operation: v[2][0], ...pos(v[0])}) %}
 
 identifier          ->  %name   {% id %}
 

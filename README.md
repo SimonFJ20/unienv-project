@@ -25,7 +25,14 @@ clear && make -B && clear && ./onejscli examples/test.one -r --ast
     - [ ] Interpreter
       - [x] Functions
       - [x] Variables
+        - [x] Access 
+        - [x] Typed declarations
+        - [ ] Infered declarations
+        - [ ] Assignment
       - [ ] Math
+        - [x] Parsing
+        - [ ] Right preceding exponentation
+        - [ ] Calculation
       - [ ] Objects
       - [ ] Classes
       - [ ] Imports
@@ -55,3 +62,4 @@ clear && make -B && clear && ./onejscli examples/test.one -r --ast
 - [X86 Assembly Documentation - zneak & HJLebbink](https://hjlebbink.github.io/x86doc/)
 - [Garbage collection - Wikipedia](https://en.wikipedia.org/wiki/Garbage_collection_(computer_science))
 - [Operator Precedence in JS - MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence)
+- [Swift Operator Declarations - Apple Developer](https://developer.apple.com/documentation/swift/swift_standard_library/operator_declarations)
