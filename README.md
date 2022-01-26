@@ -31,8 +31,8 @@ clear && make -B && clear && ./onejscli examples/test.one -r --ast
         - [ ] Assignment
       - [ ] Math
         - [x] Parsing
-        - [ ] Right preceding exponentation
         - [ ] Calculation
+        - [ ] Right preceding exponentation
       - [ ] Objects
       - [ ] Classes
       - [ ] Imports

@@ -1,7 +1,7 @@
 import { AST, Block, Expression, FuncDefStatement, FunctionCall, Identifier, LetStatement, Literal, Locateable, ReturnStatement, Statement, TypedIdentifier, TypeSpecifier } from "./ast";
 import { matchPrimitive } from "./utils";
 
-type ValueType = 'void' | 'int' |'func';
+type ValueType = 'void' | 'int' | 'float' |'func';
 
 abstract class Value {
     constructor (public type: ValueType) {}
@@ -12,9 +12,16 @@ class VoidValue extends Value {
         super('void');
     }
 }
+
 class IntValue extends Value {
     constructor (public value: number) {
         super('int');
+    }
+}
+
+class FloatValue extends Value {
+    constructor (public value: number) {
+        super('float');
     }
 }
 
@@ -212,6 +219,7 @@ const expression = (ctx: Ctx, node: Expression): Value => {
         case 'char':
             return char(ctx, node);
         case 'float':
+            return float(ctx, node);
         case 'string':   
         default:
             return error(ctx, node, `expression type '${node.type}' not implemented`);   
@@ -265,4 +273,11 @@ const char = (ctx: Ctx, node: Literal) => {
     if (value < 0 || value > 255)
         error(ctx, node, `malformed character literal '${node.value}'`);
     return new IntValue(value);
+}
+
+const float = (ctx: Ctx, node: Literal) => {
+    const value = parseInt(node.value);
+    if (isNaN(value))
+        error(ctx, node, `malformed float literal '${node.value}'`);
+    return new FloatValue(value);
 }

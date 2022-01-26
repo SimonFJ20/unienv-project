@@ -1,4 +1,6 @@
 
+let floatVal: float = 3.14
+
 let unaryLogNot: int = !8
 let unaryBitNot: int = ~8
 let unaryPlus: int = +8
@@ -23,6 +25,5 @@ let bitXor: int = 8 ^ 8
 let bitOr: int = 8 | 8
 let logAnd: int = 8 && 8
 let logOr: int = 8 || 8
-
 
 
