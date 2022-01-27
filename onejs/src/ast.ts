@@ -68,46 +68,50 @@ export type FunctionCall = Locateable & {
 }
 
 export type UnaryOperation = Locateable & {
-    type: 'unary_operation',
+    type: 'unary',
     operator: Token<'log_not' | 'bit_not' | 'plus' | 'minus'>,
     value: Expression,
 }
 
-export type ExponentationOperation = BinaryOperation & {
+export type BinaryOperation =
+    MulDivModOperation | AddSubOperation | BitshiftOperation
+    | ComparisonOperation | BitWiseOperation| LogicalOperation
+
+export type ExponentationOperation = BinaryOperationTrait & {
     type: 'exponentation',
 }
 
-export type MulDivModOperation = BinaryOperation & {
+export type MulDivModOperation = BinaryOperationTrait & {
 	type: 'mul_div_mod',
-	operation: 'mul_div_mod',
+	operation: Token<'multiply' | 'divide' | 'modulus'>,
 }
 
-export type AddSubOperation = BinaryOperation & {
+export type AddSubOperation = BinaryOperationTrait & {
 	type: 'add_sub',
-	operation: 'add_sub',
+	operation: Token<'plus' | 'minus'>,
 }
 
-export type BitshiftOperation = BinaryOperation & {
+export type BitshiftOperation = BinaryOperationTrait & {
 	type: 'bitshift',
-	operation: 'bitshift',
+	operation: Token<'bit_rights' | 'bit_right' | 'bit_left'>,
 }
 
-export type ComparisonOperation = BinaryOperation & {
+export type ComparisonOperation = BinaryOperationTrait & {
 	type: 'comparison',
-	operation: 'comparison',
+	operation: Token<'cmp_lt' | 'cmp_gt' | 'cmp_lte' | 'cmp_gte' | 'cmp_e' | 'cmp_ne'>,
 }
 
-export type BitWiseOperation = BinaryOperation & {
-	type: 'comparison',
-	operation: 'comparison',
+export type BitWiseOperation = BinaryOperationTrait & {
+	type: 'bitwise',
+	operation: Token<'bit_and' | 'bit_or' | 'bit_xor'>,
 }
 
-export type LogicalOperation = BinaryOperation & {
+export type LogicalOperation = BinaryOperationTrait & {
 	type: 'logical',
-	operation: 'logical',
+	operation: Token<'log_and' | 'log_or'>,
 }
 
-export type BinaryOperation = Locateable & {
+export type BinaryOperationTrait = Locateable & {
     left: Expression,
     right: Expression,
 }

@@ -1,4 +1,22 @@
-import { AST, Block, Expression, FuncDefStatement, FunctionCall, Identifier, LetStatement, Literal, Locateable, ReturnStatement, Statement, TypedIdentifier, TypeSpecifier } from "./ast";
+import {
+    AST,
+    BinaryOperationTrait,
+    BinaryOperation,
+    ExponentationOperation,
+    UnaryOperation,
+    Block,
+    Expression,
+    FuncDefStatement,
+    FunctionCall,
+    Identifier,
+    LetStatement,
+    Literal,
+    Locateable,
+    ReturnStatement,
+    Statement,
+    TypedIdentifier,
+    TypeSpecifier
+} from "./ast";
 import { matchPrimitive } from "./utils";
 
 type ValueType = 'void' | 'int' | 'float' |'func';
@@ -40,6 +58,7 @@ const getPrimitive = (type: ValueType) => {
     return matchPrimitive(type, null, [
         ['void', () => new VoidValue()],
         ['int', () => new IntValue(0)],
+        ['float', () => new FloatValue(0)],
     ]);
 }
 
@@ -105,6 +124,14 @@ const builtins = (): SymbolTable => {
         if (!value) throw new Error(`punjabi no value`);
         if (value.type !== 'int') throw new Error(`punjabi not an int`);
         process.stdout.write(String.fromCharCode((value as IntValue).value));
+        ctx.returnValues.push(new VoidValue());
+    }));
+
+    s.set('putint', new FuncValue([param('value', 'int')], new SymbolTable(), type('void'), (ctx) => {
+        const value = ctx.symbolTable.get('value');
+        if (!value) throw new Error(`punjabi no value`);
+        if (value.type !== 'int') throw new Error(`punjabi not an int`);
+        process.stdout.write((value as IntValue).value.toString());
         ctx.returnValues.push(new VoidValue());
     }));
 
@@ -220,7 +247,18 @@ const expression = (ctx: Ctx, node: Expression): Value => {
             return char(ctx, node);
         case 'float':
             return float(ctx, node);
-        case 'string':   
+        case 'unary':
+            return unaryOperation(ctx, node);
+        case 'exponentation':
+            return exponentation(ctx, node);
+        case 'mul_div_mod':
+        case 'add_sub':
+        case 'bitshift':
+        case 'comparison':
+        case 'bitwise':
+        case 'logical':
+            return binaryOperation(ctx, node);
+        case 'string':
         default:
             return error(ctx, node, `expression type '${node.type}' not implemented`);   
     }
@@ -248,14 +286,14 @@ const identifier = (ctx: Ctx, node: Identifier): Value => {
     return value!;
 };
 
-const int = (ctx: Ctx, node: Literal) => {
+const int = (ctx: Ctx, node: Literal): IntValue => {
     const value = parseInt(node.value);
     if (isNaN(value))
         error(ctx, node, `malformed integer literal '${node.value}'`);
     return new IntValue(value);
 }
 
-const hex = (ctx: Ctx, node: Literal) => {
+const hex = (ctx: Ctx, node: Literal): IntValue => {
     const value = parseInt(node.value, 16);
     if (isNaN(value))
         error(ctx, node, `malformed integer hex literal '${node.value}'`);
@@ -266,7 +304,7 @@ const ESCAPED_CHARS: {[key: string]: string} = {
     'n': '\n',
     't': '\t',
 };
-const char = (ctx: Ctx, node: Literal) => {
+const char = (ctx: Ctx, node: Literal): IntValue => {
     const value = node.value[0] === '\\'
         ? (ESCAPED_CHARS[node.value[1]] ?? node.value[1]).charCodeAt(0)
         : node.value.charCodeAt(0);
@@ -275,9 +313,76 @@ const char = (ctx: Ctx, node: Literal) => {
     return new IntValue(value);
 }
 
-const float = (ctx: Ctx, node: Literal) => {
+const float = (ctx: Ctx, node: Literal): FloatValue => {
     const value = parseInt(node.value);
     if (isNaN(value))
         error(ctx, node, `malformed float literal '${node.value}'`);
     return new FloatValue(value);
+}
+
+const unaryOperation = (ctx: Ctx, node: UnaryOperation): Value => {
+    const origin = expression(ctx, node.value) as IntValue | FloatValue;
+    if (origin.type !== 'int' && origin.type !== 'float')
+        error(ctx, node, `cannot perform unary operation on type '${origin.type}'`);
+    const value = matchPrimitive(node.operator.type, null, [
+        ['log_not', () => origin.value === 0 ? 1 : 0],
+        ['bit_not', () => ~origin.value],
+        ['plus', () => origin.value],
+        ['minus', () => -1 * origin.value],
+    ]);
+    if (value === null)
+        return error(ctx, node, `failed to perform '${node.operator.type}' operation: (${origin.value}) → (${origin.value ? 1 : 0}) £ (${value})`);
+    if (origin.type === 'int')
+        return new IntValue(Math.floor(value));
+    else
+        return new FloatValue(value);
+}
+
+const exponentation = (ctx: Ctx, node: ExponentationOperation): Value => {
+    const left = expression(ctx, node.left) as IntValue | FloatValue;
+    const right = expression(ctx, node.right) as IntValue | FloatValue;
+    if (left.type !== 'int' && left.type !== 'float')
+        error(ctx, node.left, `cannot perform exponentation on type '${left.type}'`);
+    if (right.type !== 'int' && right.type !== 'float')
+        error(ctx, node.left, `cannot perform exponentation on type '${right.type}'`);
+    if (left.type === 'int' && right.type === 'int')
+        return new IntValue(Math.floor(left.value ** right.value));
+    else
+        return new FloatValue(left.value ** right.value);
+}
+
+const binaryOperation = (ctx: Ctx, node: BinaryOperation): Value => {
+    const left = expression(ctx, node.left) as IntValue | FloatValue;
+    const right = expression(ctx, node.right) as IntValue | FloatValue;
+    if (left.type !== 'int' && left.type !== 'float')
+        error(ctx, node.left, `cannot perform exponentation on type '${left.type}'`);
+    if (right.type !== 'int' && right.type !== 'float')
+        error(ctx, node.left, `cannot perform exponentation on type '${right.type}'`);
+    const value = matchPrimitive(node.operation.type, null, [
+        ['multiply',    () => left.value * right.value],
+        ['divide',      () => left.value / right.value],
+        ['modulus',     () => left.value % right.value],
+        ['plus',        () => left.value + right.value],
+        ['minus',       () => left.value - right.value],
+        ['bit_rights',  () => left.value >> right.value],   // not a mistake
+        ['bit_right',   () => left.value >>> right.value],  // ONE swaps '>>' and '>>>' i.r.t. JS
+        ['bit_left',    () => left.value << right.value],
+        ['cmp_lt',      () => (left.value < right.value) ? 1 : 0],
+        ['cmp_gt',      () => (left.value > right.value) ? 1 : 0],
+        ['cmp_lte',     () => (left.value <= right.value) ? 1 : 0],
+        ['cmp_gte',     () => (left.value <= right.value) ? 1 : 0],
+        ['cmp_e',       () => (left.value === right.value) ? 1 : 0],
+        ['cmp_ne',      () => (left.value != right.value) ? 1 : 0],
+        ['bit_and',     () => left.value && right.value],
+        ['bit_or',      () => left.value || right.value],
+        ['bit_xor',     () => left.value ^ right.value],
+        ['log_and',     () => left.value & right.value],
+        ['log_or',      () => left.value | right.value],
+    ]);
+    if (value === null)
+        return error(ctx, node, `failed to perform '${(node.operation)}' operation`);
+    if (left.type === 'int' && right.type === 'int')
+        return new IntValue(Math.floor(value));
+    else
+        return new FloatValue(value);
 }

@@ -13,8 +13,9 @@ export const matchPrimitive = <T, R, D = null>(
             for (const p of pair[0])
                 if (value === p)
                     return pair[1]();
+                else {}
         else
-            if (value === p)
+            if (value === pair[0])
                 return pair[1]();
     return defVal;
 }

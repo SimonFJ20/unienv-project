@@ -1,0 +1,100 @@
+
+let floatVal: float = 3.14
+
+let unaryLogNot: int = !8
+putint(unaryLogNot)
+putchar('\n')
+
+let unaryBitNot: int = ~8
+putint(unaryBitNot)
+putchar('\n')
+
+let unaryPlus: int = +8
+putint(unaryPlus)
+putchar('\n')
+
+let unaryMinus: int = -8
+putint(unaryMinus)
+putchar('\n')
+
+let exp: int = 8 ^^ 8
+putint(exp)
+putchar('\n')
+
+let mul: int = 8 * 8
+putint(mul)
+putchar('\n')
+
+let div: int = 8 / 8
+putint(div)
+putchar('\n')
+
+let mod: int = 8 % 8
+putint(mod)
+putchar('\n')
+
+let add: int = 8 + 8
+putint(add)
+putchar('\n')
+
+let sub: int = 8 - 8
+putint(sub)
+putchar('\n')
+
+let shiftRightSigned: int = 8 >>> 8
+putint(shiftRightSigned)
+putchar('\n')
+
+let shiftRight: int = 8 >> 8
+putint(shiftRight)
+putchar('\n')
+
+let shiftLeft: int = 8 << 8
+putint(shiftLeft)
+putchar('\n')
+
+let cmpLT: int = 8 < 8
+putint(cmpLT)
+putchar('\n')
+
+let cmpGT: int = 8 > 8
+putint(cmpGT)
+putchar('\n')
+
+let cmpLTE: int = 8 <= 8
+putint(cmpLTE)
+putchar('\n')
+
+let cmpGTE: int = 8 >= 8
+putint(cmpGTE)
+putchar('\n')
+
+let cmpE: int = 8 == 8
+putint(cmpE)
+putchar('\n')
+
+let cmpNE: int = 8 != 8
+putint(cmpNE)
+putchar('\n')
+
+let bitAnd: int = 8 & 8
+putint(bitAnd)
+putchar('\n')
+
+let bitXor: int = 8 ^ 8
+putint(bitXor)
+putchar('\n')
+
+let bitOr: int = 8 | 8
+putint(bitOr)
+putchar('\n')
+
+let logAnd: int = 8 && 8
+putint(logAnd)
+putchar('\n')
+
+let logOr: int = 8 || 8
+putint(logOr)
+putchar('\n')
+
+

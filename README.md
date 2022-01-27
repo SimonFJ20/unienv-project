@@ -27,12 +27,9 @@ clear && make -B && clear && ./onejscli examples/test.one -r --ast
       - [x] Variables
         - [x] Access 
         - [x] Typed declarations
-        - [ ] Infered declarations
+        - [ ] Infered initialization
         - [ ] Assignment
-      - [ ] Math
-        - [x] Parsing
-        - [ ] Calculation
-        - [ ] Right preceding exponentation
+      - [x] Math
       - [ ] Objects
       - [ ] Classes
       - [ ] Imports
@@ -42,6 +39,7 @@ clear && make -B && clear && ./onejscli examples/test.one -r --ast
     - [ ] X86-64 Compiler
       - [ ] Stack allocations
       - [ ] Heap allocations
+      - [ ] Garbage collector
   - [ ] Self hosting
     - [ ] Lexer
     - [ ] Parser
