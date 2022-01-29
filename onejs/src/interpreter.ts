@@ -17,7 +17,8 @@ import {
     Statement,
     TypedIdentifier,
     TypeSpecifier,
-    AssignOperation
+    AssignOperation,
+    OperationType
 } from "./ast";
 import { matchPrimitive } from "./utils";
 
@@ -271,6 +272,8 @@ const expression = (ctx: Ctx, node: Expression): Value => {
         case 'bitwise':
         case 'logical':
             return binaryOperation(ctx, node);
+        case 'assign':
+            return assignOperation(ctx, node);
         case 'string':
         default:
             return error(ctx, node, `expression type '${node.type}' not implemented`);   
@@ -400,48 +403,49 @@ const binaryOperation = (ctx: Ctx, node: BinaryOperation): Value => {
         return new FloatValue(value);
 }
 
-// const assignOperation = (ctx: Ctx, node: AssignOperation): Value => {
-//     const left = node.left;
-//     const right = expression(ctx, node.right) as IntValue | FloatValue;
-//     if (right.type !== 'int' && right.type !== 'float')
-//         error(ctx, node.left, `cannot perform exponentation on type '${right.type}'`);
-//     const vValue = right.type === 'int' ? new IntValue(Math.floor(value)) : new FloatValue()
-//     switch (left.type) {
-//         default:
-//             error(ctx, node.left, `cannot assign value to '${left.type}'`);
-//     }
-//     return vValue;
-// }
+const assignOperation = (ctx: Ctx, node: AssignOperation): Value => {
+    const left = node.left as Identifier;
+    const right = expression(ctx, node.right) as IntValue | FloatValue;
+    if (left.type === 'name') {
+        if (ctx.symbolTable.get(left.value) === null) {
+            error(ctx, node, `symbol '${left.value}' is undefined`);
+        } else {
+            if (node.operation !== null) {
+                const origin = ctx.symbolTable.get(left.value) as IntValue | FloatValue;
+                if (origin.type !== 'int' && origin.type !== 'float')
+                    error(ctx, node.left, `cannot perform '${node.operation.type}' assignment on type '${origin.type}'`);
+                const rawValue = getCalculatedValueToAssign(origin, right, node);
+                if (rawValue === null)
+                    return error(ctx, node.left, `failed to perform '${node.operation.type}' assignment`);
+                const value = right.type === 'int'
+                    ? new IntValue(Math.floor(rawValue))
+                    : new FloatValue(rawValue);
+                ctx.symbolTable.set(left.value, value);
+            } else {
+                ctx.symbolTable.set(left.value, right);
+            }
+        }
+    } else
+        error(ctx, node.left, `cannot assign value to '${left.type}'`);
+    return right;
+}
 
-// const assignMathOperation = (ctx: Ctx, node: AssignOperation): Value => {
-//     const left = node.left;
-//     const origin = 1;
-//     const right = expression(ctx, node.right) as IntValue | FloatValue;
-//     if (right.type !== 'int' && right.type !== 'float')
-//         error(ctx, node.left, `cannot perform exponentation on type '${right.type}'`);
-//     const value = matchPrimitive(node.operation?.type ?? null, null, [
-//         [null,          () => right.value],
-//         ['powerof',     () => origin ** right.value],
-//         ['multiply',    () => origin * right.value],
-//         ['divide',      () => origin / right.value],
-//         ['modulus',     () => origin % right.value],
-//         ['plus',        () => origin + right.value],
-//         ['minus',       () => origin - right.value],
-//         ['bit_rights',  () => origin >> right.value],   // not a mistake
-//         ['bit_right',   () => origin >>> right.value],  // ONE swaps '>>' and '>>>' i.r.t. JS
-//         ['bit_left',    () => origin << right.value],
-//         ['bit_and',     () => origin && right.value],
-//         ['bit_or',      () => origin || right.value],
-//         ['bit_xor',     () => origin ^ right.value],
-//         ['log_and',     () => origin & right.value],
-//         ['log_or',      () => origin | right.value],
-//     ]);
-//     if (value === null)
-//         return error(ctx, node, `failed to assign '${node.operation?.type}' operation`);
-//     const vValue = right.type === 'int' ? new IntValue(Math.floor(value)) : new FloatValue()
-//     switch (left.type) {
-//         default:
-//             error(ctx, node.left, `cannot assign value to '${left.type}'`);
-//     }
-//     return vValue;
-// }
+const getCalculatedValueToAssign = (origin: IntValue | FloatValue, influencer: IntValue | FloatValue, node: AssignOperation) => {
+    return matchPrimitive(node.operation?.type ?? null, null, [
+        [null,          () => influencer.value],
+        ['powerof',     () => origin.value ** influencer.value],
+        ['multiply',    () => origin.value * influencer.value],
+        ['divide',      () => origin.value / influencer.value],
+        ['modulus',     () => origin.value % influencer.value],
+        ['plus',        () => origin.value + influencer.value],
+        ['minus',       () => origin.value - influencer.value],
+        ['bit_rights',  () => origin.value >> influencer.value],   // not a mistake
+        ['bit_right',   () => origin.value >>> influencer.value],  // ONE swaps '>>' and '>>>' i.r.t. JS
+        ['bit_left',    () => origin.value << influencer.value],
+        ['bit_and',     () => origin.value && influencer.value],
+        ['bit_or',      () => origin.value || influencer.value],
+        ['bit_xor',     () => origin.value ^ influencer.value],
+        ['log_and',     () => origin.value & influencer.value],
+        ['log_or',      () => origin.value | influencer.value],
+    ]);
+}
