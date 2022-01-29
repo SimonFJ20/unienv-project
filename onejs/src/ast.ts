@@ -2,7 +2,7 @@
 export type AST = Statement[]
 
 export type Statement = 
-    Block | FuncDefStatement | LetStatement | ReturnStatement | ValueStatement
+    Block | FuncDefStatement | LetInitialization | LetDeclaration | ReturnStatement | ValueStatement
 
 export type Block = Locateable & {
     type: 'block',
@@ -22,8 +22,19 @@ export type FunctionDefinition = Locateable & {
     body: Statement,
 }
 
-export type LetStatement = Locateable & {
-    type: 'let_statement',
+export type LetInitialization = Locateable & {
+    type: 'let_initialization',
+    initialization: Initialization,
+}
+
+export type Initialization = Locateable & {
+    type: 'initialization',
+    identifier: Identifier,
+    value: Expression,
+}
+
+export type LetDeclaration = Locateable & {
+    type: 'let_declaration',
     declaration: Declaration,
 }
 
@@ -59,6 +70,7 @@ export type Expression =
     | MulDivModOperation | AddSubOperation
     | BitshiftOperation | ComparisonOperation
     | BitWiseOperation | LogicalOperation
+    | AssignOperation
     | Identifier | Literal
 
 export type FunctionCall = Locateable & {
@@ -111,6 +123,14 @@ export type LogicalOperation = BinaryOperationTrait & {
 	operation: Token<'log_and' | 'log_or'>,
 }
 
+export type AssignOperation = BinaryOperationTrait & {
+    type: 'assign',
+    operation: Token<'plus' | 'minus' | 'multiply' | 'powerof'
+        | 'divide' | 'modulus' | 'bit_and' | 'bit_or'
+        | 'bit_xor' | 'log_and' | 'log_or' | 'qmark'
+        | 'colon' | 'bit_rights' | 'bit_right' | 'bit_left'> | null
+}
+
 export type BinaryOperationTrait = Locateable & {
     left: Expression,
     right: Expression,
@@ -127,13 +147,14 @@ export type Token<T extends TokenType> = Locateable & {
 }
 
 export type TokenType = 'nl' | 'ws' | 'comment_sl' | 'comment_ml' | 'float' | 'hex' | 'int' | 'char'
-| 'string' | 'name' | 'keyword' | 'dot' | 'lparen' | 'rparen' | 'lbrace'
-| 'rbrace' | 'lbracket' | 'rbracket' | 'comma' | 'assign' | OperationType
+    | 'string' | 'name' | 'keyword' | 'dot' | 'lparen' | 'rparen' | 'lbrace'
+    | 'rbrace' | 'lbracket' | 'rbracket' | 'comma' | 'assign' | OperationType
 
-export type OperationType = 'plus' | 'minus' | 'multiply' | 'powerof' | 'divide' | 'modulus' | 'bit_and' | 'bit_or' | 'bit_xor'
-| 'bit_not' | 'cmp_e' | 'cmp_ne' | 'cmp_lte' | 'cmp_gte' | 'cmp_lt' | 'cmp_gt'
-| 'log_not' | 'log_and' | 'log_or' | 'qmark' | 'colon'
-| 'bit_rights' | 'bit_right' | 'bit_left'
+export type OperationType = 'plus' | 'minus' | 'multiply' | 'powerof' | 'divide'
+    | 'modulus' | 'bit_and' | 'bit_or' | 'bit_xor'
+    | 'bit_not' | 'cmp_e' | 'cmp_ne' | 'cmp_lte' | 'cmp_gte' | 'cmp_lt' | 'cmp_gt'
+    | 'log_not' | 'log_and' | 'log_or' | 'qmark' | 'colon'
+    | 'bit_rights' | 'bit_right' | 'bit_left'
 
 export type Locateable = {
     offset: number,

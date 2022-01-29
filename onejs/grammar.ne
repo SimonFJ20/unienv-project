@@ -68,7 +68,8 @@ statements          ->  (_ statement (_nl_ statement):*):? _
 
 statement           ->  block               {% id %}
                     |   func_def_statement  {% id %}
-                    |   let_statement       {% id %}
+                    |   let_initialization  {% id %}
+                    |   let_declaration     {% id %}
                     |   return_statement    {% id %}
                     |   value_statement     {% id %}
 
@@ -84,8 +85,14 @@ function_definition ->  %name _ "(" parameters ")" _ type_specifier _ statement
 parameters          ->  (_ typed_identifier (_ "," _ typed_identifier):*):? _
     {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
 
-let_statement       ->  "let" __ declaration
-    {% v => ({type: 'let_statement', declaration: v[2], ...pos(v[0])}) %}
+let_initialization  ->  "let" __ initialization
+    {% v => ({type: 'let_initialization', initialization: v[2], ...pos(v[0])}) %}
+
+initialization      ->  %name _ ":=" _ expression
+    {% v => ({type: 'initialization', identifier: v[0], value: v[4], ...pos(v[0])}) %}
+
+let_declaration     ->  "let" __ declaration
+    {% v => ({type: 'let_declaration', declaration: v[2], ...pos(v[0])}) %}
 
 declaration         ->  typed_identifier (_ "=" _ expression):?
     {% v => ({type: 'declaration', typedIdentifier: v[0], value: v[1] ? v[1][3] : null, ...pos(v[0])}) %}
@@ -112,6 +119,7 @@ expression          ->  grouping            {% id %}
                     |   comparison          {% id %}
                     |   bitwise             {% id %}
                     |   logical             {% id %}
+                    |   assign              {% id %}
                     |   identifier          {% id %}
                     |   literal             {% id %}
 
@@ -124,7 +132,7 @@ function_call       ->  expression _ "(" arguments ")"
 arguments           ->  (_ expression (_ "," _ expression):*):? _
     {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
 
-unary               ->  ("!" | "~" | "+" | "-") _ expression
+unary               ->  ("!"|"~" |"+"|"-") _ expression
     {% v => ({type: 'unary', operator: v[0][0], value: v[2], ...pos(v[0][0])}) %}
 
 exponentation       ->  expression _ %powerof _ expression
@@ -147,6 +155,12 @@ bitwise             ->  expression _ ("&"|"^"|"|") _ expression
 
 logical             ->  expression _ ("&&"|"||") _ expression
     {% v => ({type: 'logical', left: v[0], right: v[4], operation: v[2][0], ...pos(v[0])}) %}
+
+assign              ->  expression _ operators:? _ "=" _ expression
+    {% v => ({type: 'assign', left: v[0], right: v[6], operation: v[2] ? v[2][0] : null, ...pos(v[0])}) %}
+
+operators           -> (%powerof|"*"|"/"|"%"|"+"|"-"|">>>"|">>"|"<<"|"&"|"^"|"|"|"&&"|"||")
+    {% v => v[0] %}
 
 identifier          ->  %name   {% id %}
 

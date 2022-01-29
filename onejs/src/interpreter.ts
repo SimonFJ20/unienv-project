@@ -9,13 +9,15 @@ import {
     FuncDefStatement,
     FunctionCall,
     Identifier,
-    LetStatement,
+    LetInitialization,
+    LetDeclaration,
     Literal,
     Locateable,
     ReturnStatement,
     Statement,
     TypedIdentifier,
-    TypeSpecifier
+    TypeSpecifier,
+    AssignOperation
 } from "./ast";
 import { matchPrimitive } from "./utils";
 
@@ -181,8 +183,10 @@ const statement = (ctx: Ctx, node: Statement) => {
             return block(ctx, node);
         case 'func_def_statement':
             return funcDefStatement(ctx, node);
-        case 'let_statement':
-            return letStatement(ctx, node);
+        case 'let_initialization':
+            return letInitialization(ctx, node);
+        case 'let_declaration':
+            return letDeclaration(ctx, node);
         case 'return_statement':
             return returnStatement(ctx, node);
         case 'value_statement':
@@ -210,7 +214,16 @@ const funcDefStatement = (ctx: Ctx, node: FuncDefStatement) => {
     ctx.symbolTable.set(node.definition.identifier.value, func);
 }
 
-const letStatement = (ctx: Ctx, node: LetStatement) => {
+const letInitialization = (ctx: Ctx, node: LetInitialization) => {
+    const identifier = node.initialization.identifier;
+    if (ctx.symbolTable.existsLocally(identifier.value))
+        return error(ctx, identifier,
+            `redeclaration of local '${ctx.symbolTable.get(identifier.value)}'`);
+    const value = expression(ctx, node.initialization.value);
+    ctx.symbolTable.set(identifier.value, value);
+}
+
+const letDeclaration = (ctx: Ctx, node: LetDeclaration) => {
     const identifier = node.declaration.typedIdentifier.identifier;
     if (ctx.symbolTable.existsLocally(identifier.value))
         return error(ctx, identifier,
@@ -386,3 +399,49 @@ const binaryOperation = (ctx: Ctx, node: BinaryOperation): Value => {
     else
         return new FloatValue(value);
 }
+
+// const assignOperation = (ctx: Ctx, node: AssignOperation): Value => {
+//     const left = node.left;
+//     const right = expression(ctx, node.right) as IntValue | FloatValue;
+//     if (right.type !== 'int' && right.type !== 'float')
+//         error(ctx, node.left, `cannot perform exponentation on type '${right.type}'`);
+//     const vValue = right.type === 'int' ? new IntValue(Math.floor(value)) : new FloatValue()
+//     switch (left.type) {
+//         default:
+//             error(ctx, node.left, `cannot assign value to '${left.type}'`);
+//     }
+//     return vValue;
+// }
+
+// const assignMathOperation = (ctx: Ctx, node: AssignOperation): Value => {
+//     const left = node.left;
+//     const origin = 1;
+//     const right = expression(ctx, node.right) as IntValue | FloatValue;
+//     if (right.type !== 'int' && right.type !== 'float')
+//         error(ctx, node.left, `cannot perform exponentation on type '${right.type}'`);
+//     const value = matchPrimitive(node.operation?.type ?? null, null, [
+//         [null,          () => right.value],
+//         ['powerof',     () => origin ** right.value],
+//         ['multiply',    () => origin * right.value],
+//         ['divide',      () => origin / right.value],
+//         ['modulus',     () => origin % right.value],
+//         ['plus',        () => origin + right.value],
+//         ['minus',       () => origin - right.value],
+//         ['bit_rights',  () => origin >> right.value],   // not a mistake
+//         ['bit_right',   () => origin >>> right.value],  // ONE swaps '>>' and '>>>' i.r.t. JS
+//         ['bit_left',    () => origin << right.value],
+//         ['bit_and',     () => origin && right.value],
+//         ['bit_or',      () => origin || right.value],
+//         ['bit_xor',     () => origin ^ right.value],
+//         ['log_and',     () => origin & right.value],
+//         ['log_or',      () => origin | right.value],
+//     ]);
+//     if (value === null)
+//         return error(ctx, node, `failed to assign '${node.operation?.type}' operation`);
+//     const vValue = right.type === 'int' ? new IntValue(Math.floor(value)) : new FloatValue()
+//     switch (left.type) {
+//         default:
+//             error(ctx, node.left, `cannot assign value to '${left.type}'`);
+//     }
+//     return vValue;
+// }

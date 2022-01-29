@@ -27,7 +27,7 @@ clear && make -B && clear && ./onejscli examples/test.one -r --ast
       - [x] Variables
         - [x] Access 
         - [x] Typed declarations
-        - [ ] Infered initialization
+        - [x] Infered initialization
         - [ ] Assignment
       - [x] Math
       - [ ] Objects
