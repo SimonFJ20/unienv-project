@@ -109,7 +109,11 @@ return_statement    ->  "return" __ expression
 value_statement     ->  expression
     {% v => ({type: 'value_statement', value: v[0], ...pos(v[0])}) %}
 
+expressions         ->  (_ expression (_ "," _ expression):*):? _
+    {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
+
 expression          ->  grouping            {% id %}
+                    |   object_literal      {% id %}
                     |   function_call       {% id %}
                     |   unary               {% id %}
                     |   exponentation       {% id %}
@@ -126,11 +130,11 @@ expression          ->  grouping            {% id %}
 grouping            ->  "(" _ expression _ ")"
     {% v => ({...v[2], ...pos(v[0])}) %}
 
-function_call       ->  expression _ "(" arguments ")"
-    {% v => ({type: 'function_call', function: v[0], arguments: v[3], ...pos(v[0])}) %}
+object_literal      ->  "{" expressions "}"
+    {% v => ({type: 'object_literal', values: v[2], ...pos(v[0])}) %}
 
-arguments           ->  (_ expression (_ "," _ expression):*):? _
-    {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
+function_call       ->  expression _ "(" expressions ")"
+    {% v => ({type: 'function_call', function: v[0], arguments: v[3], ...pos(v[0])}) %}
 
 unary               ->  ("!"|"~" |"+"|"-") _ expression
     {% v => ({type: 'unary', operator: v[0][0], value: v[2], ...pos(v[0][0])}) %}

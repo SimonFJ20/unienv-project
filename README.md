@@ -28,10 +28,12 @@ clear && make -B && clear && ./onejscli examples/test.one -r --ast
         - [x] Access 
         - [x] Typed declarations
         - [x] Infered initialization
-        - [ ] Assignment
+        - [x] Assignment
       - [x] Math
       - [ ] Objects
-      - [ ] Classes
+        - [ ] Dynamic
+        - [ ] Classes
+      - [ ] Inline functions
       - [ ] Imports
       - [ ] Strings
       - [ ] File
