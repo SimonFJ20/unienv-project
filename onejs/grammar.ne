@@ -14,9 +14,12 @@ const lexer = compile({
     char:       {match: /'(?:[^'\\]|\\[\s\S])'/, value: s => s.slice(1, -1)},
     string:     {match: /"(?:[^"\\]|\\[\s\S])*"/, value: s => s.slice(1, -1)},
     name:       {match: /[a-zA-Z0-9_]+/, type: keywords({
-        keyword: ['func', 'return', 'let', 'if', 'else', 'while', 'import', 'class', 'static']
+        keyword: ['func', 'return', 'let', 'if', 'else', 'while', 'import', 'struct']
     })},
     dot:        '.',
+
+    heavyarrow: '=>',
+    thinarrow:  '->',
 
     lparen:     '(',
     rparen:     ')',
@@ -67,6 +70,8 @@ statements          ->  (_ statement (_nl_ statement):*):? _
     {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[1])] : [] %}
 
 statement           ->  block               {% id %}
+                    |   struct_def          {% id %}
+                    |   method_def          {% id %}
                     |   func_def_statement  {% id %}
                     |   let_initialization  {% id %}
                     |   let_declaration     {% id %}
@@ -75,6 +80,12 @@ statement           ->  block               {% id %}
 
 block               ->  "{" statements "}"
     {% v => ({type: 'block', body: v[1], ...pos(v[0])}) %}
+
+struct_def          ->  "struct" __ %name _ "{" parameters "}"
+    {% v => ({type: 'struct_def', identifier: v[2], fields: v[5], ...pos(v[0])}) %}
+
+method_def          ->  "func" _ "(" _ typed_identifier _ ")" _ function_definition
+    {% v => ({type: 'method_def', structIdentifier: v[4], definition: v[8], ...pos(v[0])}) %}
 
 func_def_statement  ->  "func" __ function_definition
     {% v => ({type: 'func_def_statement', definition: v[2], ...pos(v[0])}) %}
@@ -109,11 +120,11 @@ return_statement    ->  "return" __ expression
 value_statement     ->  expression
     {% v => ({type: 'value_statement', value: v[0], ...pos(v[0])}) %}
 
-expressions         ->  (_ expression (_ "," _ expression):*):? _
-    {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
-
 expression          ->  grouping            {% id %}
+                    |   member_access       {% id %}
+                    |   object_constructor  {% id %}
                     |   object_literal      {% id %}
+                    |   array_literal       {% id %}
                     |   function_call       {% id %}
                     |   unary               {% id %}
                     |   exponentation       {% id %}
@@ -125,16 +136,35 @@ expression          ->  grouping            {% id %}
                     |   logical             {% id %}
                     |   assign              {% id %}
                     |   identifier          {% id %}
+                    |   inline_function     {% id %}
                     |   literal             {% id %}
 
 grouping            ->  "(" _ expression _ ")"
     {% v => ({...v[2], ...pos(v[0])}) %}
 
-object_literal      ->  "{" expressions "}"
-    {% v => ({type: 'object_literal', values: v[2], ...pos(v[0])}) %}
+member_access       ->  expression _ "." _ %name
+    {% v => ({type: 'member_access', parent: v[0], identifier: v[4], ...pos(v[0])}) %}
+
+object_constructor  ->  expression _ object_literal
+    {% v => ({type: 'object_constructor', struct: v[0], pairs: v[2].pairs, ...pos(v[0])}) %}
+
+object_literal      ->  "{" keyvaluepairs "}"
+    {% v => ({type: 'object_literal', pairs: v[2], ...pos(v[0])}) %}
+
+keyvaluepairs       ->  (_ keyvaluepair (_ "," _ keyvaluepair):*):? _
+    {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
+
+keyvaluepair        ->  %name _ ":" _ expression
+    {% v => ({type: 'keyvaluepair', key: v[0], value: [4], ...pos(v[0])}) %}
+
+array_literal       ->  "[" expressions "]"
+    {% v => ({type: 'array_literal', values: v[2], ...pos(v[0])}) %}
 
 function_call       ->  expression _ "(" expressions ")"
     {% v => ({type: 'function_call', function: v[0], arguments: v[3], ...pos(v[0])}) %}
+
+expressions         ->  (_ expression (_ "," _ expression):*):? _
+    {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
 
 unary               ->  ("!"|"~" |"+"|"-") _ expression
     {% v => ({type: 'unary', operator: v[0][0], value: v[2], ...pos(v[0][0])}) %}
@@ -165,6 +195,9 @@ assign              ->  expression _ operators:? _ "=" _ expression
 
 operators           -> (%powerof|"*"|"/"|"%"|"+"|"-"|">>>"|">>"|"<<"|"&"|"^"|"|"|"&&"|"||")
     {% v => v[0] %}
+
+inline_function     ->  "(" parameters ")" _ (type_specifier):? _ "=>" _ expression
+    {% v => ({type: 'inline_function', parameters: v[1], returnType: v[4] ? v[4][0] : null, value: v[8], ...pos(v[0])}) %}
 
 identifier          ->  %name   {% id %}
 

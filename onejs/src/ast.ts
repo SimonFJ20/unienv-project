@@ -9,6 +9,28 @@ export type Block = Locateable & {
     body: Statement[],
 }
 
+/*
+
+struct_def          ->  "struct" __ %name _ "{" parameters "}"
+    {% v => ({type: 'struct_def', identifier: v[2], fields: v[5], ...pos(v[0])}) %}
+
+method_def          ->  "func" _ "(" _ typed_identifier _ ")" _ function_definition
+    {% v => ({type: 'method_def', structIdentifier: v[4], definition: v[8], ...pos(v[0])}) %}
+
+*/
+
+export type StructDef = Locateable & {
+    type: 'struct_def',
+    identifier: Identifier,
+    fields: TypedIdentifier[],
+}
+
+export type MethodDef = Locateable & {
+    type: 'method_def',
+    structIdentifier: TypedIdentifier,
+    definition: FunctionDefinition,
+}
+
 export type FuncDefStatement = Locateable & {
     type: 'func_def_statement',
     definition: FunctionDefinition,
@@ -66,12 +88,48 @@ export type ValueStatement = Locateable & {
 }
 
 export type Expression =
-    FunctionCall | UnaryOperation | ExponentationOperation
+    InlineFunction | ObjectLiteral | ArrayLiteral
+    | FunctionCall | UnaryOperation | ExponentationOperation
     | MulDivModOperation | AddSubOperation
     | BitshiftOperation | ComparisonOperation
     | BitWiseOperation | LogicalOperation
     | AssignOperation
     | Identifier | Literal
+
+export type MemberAccess = Locateable & {
+    type: 'member_access',
+    parent: Expression,
+    identifier: Identifier,
+}
+
+export type InlineFunction = Locateable & {
+    type: 'inline_function',
+    parameters: TypedIdentifier[],
+    returnType: TypeSpecifier | null,
+    value: Expression,
+}
+
+export type ObjectConstructor = Locateable & {
+    type: 'object_constructor',
+    struct: Identifier,
+    pairs: KeyValuePair[],
+}
+
+export type ObjectLiteral = Locateable & {
+    type: 'object_literal',
+    pairs: KeyValuePair[],
+}
+
+export type KeyValuePair = Locateable & {
+    type: 'keyvaluepair',
+    key: Identifier,
+    value: Expression,
+}
+
+export type ArrayLiteral = Locateable & {
+    type: 'array_literal',
+    values: Expression[],
+}
 
 export type FunctionCall = Locateable & {
     type: 'function_call',

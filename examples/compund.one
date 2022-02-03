@@ -1,0 +1,27 @@
+
+struct MyStruct {
+    asd: int,
+    qwerty: char,
+    vv: string
+}
+
+let c := [
+    true,
+    false,
+    "foo",
+    123
+]
+
+let b := {
+    based: true,
+    hello: "world"
+}
+
+let a := MyStruct {
+    asd: 213,
+    qwerty: 's',
+    vv: "hello"
+}
+
+let d := a.asd
+

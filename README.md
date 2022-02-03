@@ -21,7 +21,7 @@ clear && make -B && clear && ./onejscli examples/test.one -r --ast
 
 - [ ] ONE
   - [ ] ONEJS
-    - [ ] Parser
+    - [x] Parser
     - [ ] Interpreter
       - [x] Functions
       - [x] Variables

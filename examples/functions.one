@@ -1,0 +1,13 @@
+
+func (this: MyStruct) foo(a: int): int {
+    // something something return this.bar + a
+}
+
+func normalFunction(b: int, a: string): void {
+    
+}
+
+let c := (b: int, a: string): int => 3
+
+
+let d := (b: int, a: string) => "undefined"
