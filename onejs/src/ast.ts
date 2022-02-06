@@ -31,6 +31,12 @@ export type DestructorDef = Locateable & {
     definition: FunctionDefinition,
 }
 
+export type StructOperatorDef = Locateable & {
+    type: 'struct_operator_def',
+    operator: Token<OperationType>,
+    definition: FunctionDefinition,
+}
+
 export type FuncDefStatement = Locateable & {
     type: 'func_def_statement',
     definition: FunctionDefinition,
@@ -41,6 +47,40 @@ export type FunctionDefinition = Locateable & {
     identifier: Identifier,
     parameters: TypedIdentifier[],
     returnType: TypeSpecifier,
+    body: Statement,
+}
+
+export type ForCondition = Locateable & {
+    type: 'for_condition',
+    declaration: Statement,
+    condition: Expression,
+    increment: Statement,
+    body: Statement,
+}
+
+export type ForIterator = Locateable & {
+    type: 'for_iterator',
+    iteration: Identifier,
+    iterator: Expression,
+    body: Statement,
+}
+
+export type WhileStatement = Locateable & {
+    type: 'while_statement',
+    condition: Expression,
+    body: Statement,
+}
+
+export type IfElseStatement = Locateable & {
+    type: 'if_else_statement',
+    condition: Expression,
+    truthy: Statement,
+    falsy: Statement,
+}
+
+export type IfStatement = Locateable & {
+    type: 'if_statement',
+    condition: Expression,
     body: Statement,
 }
 

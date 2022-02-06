@@ -11,10 +11,10 @@ const lexer = compile({
     float:      /\-?(?:(?:0|(?:[1-9][0-9]*))\.[0-9]+)/,
     hex:        /0x[0-9a-fA-F]+/,
     int:        /0|(?:[1-9][0-9]*)/,
-    char:       {match: /'(?:[^'\\]|\\[\s\S])'/, value: s => s.slice(1, -1)},
-    string:     {match: /"(?:[^"\\]|\\[\s\S])*"/, value: s => s.slice(1, -1)},
+    char:       {match: /'(?:[^'\\]|\\[\s\S])'/, value: s => s.slice(1, -1), lineBreaks: true},
+    string:     {match: /"(?:[^"\\]|\\[\s\S])*"/, value: s => s.slice(1, -1), lineBreaks: true},
     name:       {match: /[a-zA-Z0-9_]+/, type: keywords({
-        keyword: ['func', 'return', 'let', 'import', 'struct', 'new', 'delete']
+        keyword: ['func', 'return', 'if', 'else', 'while', 'for', 'break', 'continue', 'let', 'import', 'struct', 'new', 'delete']
     })},
     dot:        '.',
 
@@ -90,8 +90,15 @@ method_def          ->  "func" _ "(" _ typed_identifier _ ")" _ function_definit
 constructor_def     ->  "func" __ "new" __ function_definition
     {% v => ({type: 'constructor_def', definition: v[4], ...pos(v[0])}) %}
 
-destructor_def     ->  "func" __ "delete" __ function_definition
+destructor_def      ->  "func" __ "delete" __ function_definition
     {% v => ({type: 'destructor_def', definition: v[4], ...pos(v[0])}) %}
+
+struct_operator_def ->  "func" __ defable_operator __ function_definition
+    {% v => ({type: 'struct_operator_def', operator: v[2], definition: v[4], ...pos(v[0])}) %}
+
+defable_operator    ->  (%powerof|"*"|"/"|"%"|"+"|"-"|">>>"|">>"|"<<"|"&"|"^"|"|"
+                        |"&&"|"||"|"!"|"~" |"+"|"-"|"<"|">"|"<="|">="|"=="|"!=")
+    {% v => v[0] %}
 
 func_def_statement  ->  "func" __ function_definition
     {% v => ({type: 'func_def_statement', definition: v[2], ...pos(v[0])}) %}
@@ -101,6 +108,21 @@ function_definition ->  %name _ "(" parameters ")" _ type_specifier _ statement
 
 parameters          ->  (_ typed_identifier (_ "," _ typed_identifier):*):? _
     {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
+
+for_condition       ->  "for" _ "(" _ statement _nl_ expression _nl_ statement _ ")" _ statement
+    {% v => ({type: 'for_condition', declaration: v[4], condition: v[6], increment: v[8], body: v[12], ...pos(v[0])}) %}
+
+for_iterator        ->  "for" _ ("(" _):? identifier _ ":" _ expression ((__)|(_ ")" _)) statement
+    {% v => ({type: 'for_iterator', iteration: v[3], iterator: v[7], body: v[9], ...pos(v[0])}) %}
+
+while_statement     ->  "while" __ expression __ statement
+    {% v => ({type: 'while_statement', condition: v[2], body: v[4], ...pos(v[0])}) %}
+
+if_else_statement   ->  if_statement __ else __ expression
+    {% v => ({type: 'if_else_statement', condition: v[0].condition, truthy: v[0].body, falsy: v[4], ...pos(v[0])}) %}
+
+if_statement        ->  "if" __ expression _ statement
+    {% v => ({type: 'if_statement', condition: v[2], body: v[4], ...pos(v[0])}) %}
 
 let_initialization  ->  "let" __ initialization
     {% v => ({type: 'let_initialization', initialization: v[2], ...pos(v[0])}) %}
@@ -205,10 +227,10 @@ bitwise             ->  expression _ ("&"|"^"|"|") _ expression
 logical             ->  expression _ ("&&"|"||") _ expression
     {% v => ({type: 'logical', left: v[0], right: v[4], operation: v[2][0], ...pos(v[0])}) %}
 
-assign              ->  expression _ (operators _):? "=" _ expression
+assign              ->  expression _ (assign_operators _):? "=" _ expression
     {% v => ({type: 'assign', left: v[0], right: v[6], operation: v[2] ? v[2][0] : null, ...pos(v[0])}) %}
 
-operators           -> (%powerof|"*"|"/"|"%"|"+"|"-"|">>>"|">>"|"<<"|"&"|"^"|"|"|"&&"|"||")
+assign_operators           -> (%powerof|"*"|"/"|"%"|"+"|"-"|">>>"|">>"|"<<"|"&"|"^"|"|"|"&&"|"||")
     {% v => v[0] %}
 
 inline_function     ->  "(" parameters ")" _ (type_specifier):? _ "=>" _ expression
