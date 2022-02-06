@@ -14,7 +14,7 @@ const lexer = compile({
     char:       {match: /'(?:[^'\\]|\\[\s\S])'/, value: s => s.slice(1, -1)},
     string:     {match: /"(?:[^"\\]|\\[\s\S])*"/, value: s => s.slice(1, -1)},
     name:       {match: /[a-zA-Z0-9_]+/, type: keywords({
-        keyword: ['func', 'return', 'let', 'if', 'else', 'while', 'import', 'struct']
+        keyword: ['func', 'return', 'let', 'import', 'struct', 'new', 'delete']
     })},
     dot:        '.',
 
@@ -87,6 +87,12 @@ struct_def          ->  "struct" __ %name _ "{" parameters "}"
 method_def          ->  "func" _ "(" _ typed_identifier _ ")" _ function_definition
     {% v => ({type: 'method_def', structIdentifier: v[4], definition: v[8], ...pos(v[0])}) %}
 
+constructor_def     ->  "func" __ "new" __ function_definition
+    {% v => ({type: 'constructor_def', definition: v[4], ...pos(v[0])}) %}
+
+destructor_def     ->  "func" __ "delete" __ function_definition
+    {% v => ({type: 'destructor_def', definition: v[4], ...pos(v[0])}) %}
+
 func_def_statement  ->  "func" __ function_definition
     {% v => ({type: 'func_def_statement', definition: v[2], ...pos(v[0])}) %}
 
@@ -145,6 +151,9 @@ grouping            ->  "(" _ expression _ ")"
 member_access       ->  expression _ "." _ %name
     {% v => ({type: 'member_access', parent: v[0], identifier: v[4], ...pos(v[0])}) %}
 
+indexing            ->  expression _ "[" _ expression _ "]"
+    {% v => ({type: 'indexing', parent: v[0], index: v[4], ...pos(v[0])}) %}
+
 object_constructor  ->  expression _ object_literal
     {% v => ({type: 'object_constructor', struct: v[0], pairs: v[2].pairs, ...pos(v[0])}) %}
 
@@ -160,11 +169,17 @@ keyvaluepair        ->  %name _ ":" _ expression
 array_literal       ->  "[" expressions "]"
     {% v => ({type: 'array_literal', values: v[2], ...pos(v[0])}) %}
 
+new                 ->  "new" __ expression
+    {% v => ({type: 'new', source: v[2], ...pos(v[0])}) %}
+
 function_call       ->  expression _ "(" expressions ")"
     {% v => ({type: 'function_call', function: v[0], arguments: v[3], ...pos(v[0])}) %}
 
 expressions         ->  (_ expression (_ "," _ expression):*):? _
     {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
+
+delete              ->  "delete" __ expression
+    {% v => ({type: 'delete', source: v[2], ...pos(v[0])}) %}
 
 unary               ->  ("!"|"~" |"+"|"-") _ expression
     {% v => ({type: 'unary', operator: v[0][0], value: v[2], ...pos(v[0][0])}) %}
@@ -190,7 +205,7 @@ bitwise             ->  expression _ ("&"|"^"|"|") _ expression
 logical             ->  expression _ ("&&"|"||") _ expression
     {% v => ({type: 'logical', left: v[0], right: v[4], operation: v[2][0], ...pos(v[0])}) %}
 
-assign              ->  expression _ operators:? _ "=" _ expression
+assign              ->  expression _ (operators _):? "=" _ expression
     {% v => ({type: 'assign', left: v[0], right: v[6], operation: v[2] ? v[2][0] : null, ...pos(v[0])}) %}
 
 operators           -> (%powerof|"*"|"/"|"%"|"+"|"-"|">>>"|">>"|"<<"|"&"|"^"|"|"|"&&"|"||")

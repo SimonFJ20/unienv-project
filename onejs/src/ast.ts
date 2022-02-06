@@ -9,16 +9,6 @@ export type Block = Locateable & {
     body: Statement[],
 }
 
-/*
-
-struct_def          ->  "struct" __ %name _ "{" parameters "}"
-    {% v => ({type: 'struct_def', identifier: v[2], fields: v[5], ...pos(v[0])}) %}
-
-method_def          ->  "func" _ "(" _ typed_identifier _ ")" _ function_definition
-    {% v => ({type: 'method_def', structIdentifier: v[4], definition: v[8], ...pos(v[0])}) %}
-
-*/
-
 export type StructDef = Locateable & {
     type: 'struct_def',
     identifier: Identifier,
@@ -28,6 +18,16 @@ export type StructDef = Locateable & {
 export type MethodDef = Locateable & {
     type: 'method_def',
     structIdentifier: TypedIdentifier,
+    definition: FunctionDefinition,
+}
+
+export type ConstructorDef = Locateable & {
+    type: 'constructor_def',
+    definition: FunctionDefinition,
+}
+
+export type DestructorDef = Locateable & {
+    type: 'destructor_def',
     definition: FunctionDefinition,
 }
 
@@ -102,6 +102,12 @@ export type MemberAccess = Locateable & {
     identifier: Identifier,
 }
 
+export type Indexing = Locateable & {
+    type: 'indexing',
+    parent: Expression,
+    index: Expression,
+}
+
 export type InlineFunction = Locateable & {
     type: 'inline_function',
     parameters: TypedIdentifier[],
@@ -131,10 +137,20 @@ export type ArrayLiteral = Locateable & {
     values: Expression[],
 }
 
+export type New = Locateable & {
+    type: 'new',
+    source: Expression,
+}
+
 export type FunctionCall = Locateable & {
     type: 'function_call',
     function: Expression,
     arguments: Expression[],
+}
+
+export type Delete = Locateable & {
+    type: 'delete',
+    source: Expression,
 }
 
 export type UnaryOperation = Locateable & {

@@ -1,0 +1,16 @@
+
+struct String {
+    value: string;
+}
+
+func new String(): String {
+    return String {
+        value: ""
+    }
+}
+
+func StringFrom(value: string): String {
+    return string {
+        value: value
+    }
+}
