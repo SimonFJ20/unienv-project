@@ -73,6 +73,11 @@ statement           ->  block               {% id %}
                     |   struct_def          {% id %}
                     |   method_def          {% id %}
                     |   func_def_statement  {% id %}
+                    |   for_condition       {% id %}
+                    |   for_iterator        {% id %}
+                    |   while_statement     {% id %}
+                    |   if_else_statement   {% id %}
+                    |   if_statement        {% id %}
                     |   let_initialization  {% id %}
                     |   let_declaration     {% id %}
                     |   return_statement    {% id %}
@@ -118,7 +123,7 @@ for_iterator        ->  "for" _ ("(" _):? identifier _ ":" _ expression ((__)|(_
 while_statement     ->  "while" __ expression __ statement
     {% v => ({type: 'while_statement', condition: v[2], body: v[4], ...pos(v[0])}) %}
 
-if_else_statement   ->  if_statement __ else __ expression
+if_else_statement   ->  if_statement __ "else" __ expression
     {% v => ({type: 'if_else_statement', condition: v[0].condition, truthy: v[0].body, falsy: v[4], ...pos(v[0])}) %}
 
 if_statement        ->  "if" __ expression _ statement
@@ -180,13 +185,13 @@ object_constructor  ->  expression _ object_literal
     {% v => ({type: 'object_constructor', struct: v[0], pairs: v[2].pairs, ...pos(v[0])}) %}
 
 object_literal      ->  "{" keyvaluepairs "}"
-    {% v => ({type: 'object_literal', pairs: v[2], ...pos(v[0])}) %}
+    {% v => ({type: 'object_literal', pairs: v[1], ...pos(v[0])}) %}
 
 keyvaluepairs       ->  (_ keyvaluepair (_ "," _ keyvaluepair):*):? _
     {% v => v[0] ? [v[0][1], ...v[0][2].map((v: any) => v[3])] : [] %}
 
 keyvaluepair        ->  %name _ ":" _ expression
-    {% v => ({type: 'keyvaluepair', key: v[0], value: [4], ...pos(v[0])}) %}
+    {% v => ({type: 'keyvaluepair', key: v[0], value: v[4], ...pos(v[0])}) %}
 
 array_literal       ->  "[" expressions "]"
     {% v => ({type: 'array_literal', values: v[2], ...pos(v[0])}) %}

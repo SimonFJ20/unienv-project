@@ -1,28 +1,29 @@
 import {
     AST,
-    BinaryOperationTrait,
-    BinaryOperation,
-    ExponentationOperation,
-    UnaryOperation,
-    Block,
-    Expression,
-    FuncDefStatement,
-    FunctionCall,
+    BinaryOperationNode,
+    ExponentationOperationNode,
+    UnaryOperationNode,
+    BlockNode,
+    ExpressionNode,
+    FuncDefStatementNode,
+    FunctionCallNode,
     Identifier,
-    LetInitialization,
-    LetDeclaration,
+    LetInitializationNode,
+    LetDeclarationNode,
     Literal,
     Locateable,
-    ReturnStatement,
-    Statement,
-    TypedIdentifier,
-    TypeSpecifier,
-    AssignOperation,
-    OperationType
+    ReturnStatementNode,
+    StatementNode,
+    TypedIdentifierNode,
+    TypeSpecifierNode,
+    AssignOperationNode,
+    StructDefNode,
+    ObjectConstructorNode,
+    MemberAccessNode
 } from "./ast";
 import { matchPrimitive } from "./utils";
 
-type ValueType = 'void' | 'int' | 'float' |'func';
+type ValueType = 'void' | 'int' | 'float' |'func' | 'object';
 
 abstract class Value {
     constructor (public type: ValueType) {}
@@ -48,12 +49,20 @@ class FloatValue extends Value {
 
 class FuncValue extends Value {
     constructor (
-        public arguements: TypedIdentifier[],
+        public arguements: TypedIdentifierNode[],
         public definitionSymbols: SymbolTable,
-        public returnValue: TypeSpecifier,
+        public returnValue: TypeSpecifierNode,
         public execute: (callCtx: Ctx) => void,
     ) {
         super('func');
+    }
+}
+
+class ObjectValue extends Value {
+    constructor (
+        public pairs: {[key: string]: Value},
+    ) {
+        super('object');
     }
 }
 
@@ -103,7 +112,7 @@ const builtins = (): SymbolTable => {
         ...unlocateable(),
     });
 
-    const param = (name: string, type: string): TypedIdentifier => ({
+    const param = (name: string, type: string): TypedIdentifierNode => ({
         type: 'typed_identifier',
         identifier: iden(name),
         typeSpecifier: {
@@ -114,7 +123,7 @@ const builtins = (): SymbolTable => {
         ...unlocateable(),
     });
 
-    const type = (type: string): TypeSpecifier => ({
+    const type = (type: string): TypeSpecifierNode => ({
         type: 'type_specifier',
         identifier: iden(type),
         ...unlocateable(),
@@ -153,6 +162,7 @@ type Ctx = {
     symbolTable: SymbolTable,
     returnValues: Value[],
     shouldReturn: boolean,
+    structs: StructDefNode[],
 };
 
 export const evaluate = (nodes: AST, filename?: string) => {
@@ -161,6 +171,7 @@ export const evaluate = (nodes: AST, filename?: string) => {
         symbolTable: new SymbolTable(builtins()),
         returnValues: [],
         shouldReturn: false,
+        structs: [],
     }, nodes);
 }
 
@@ -170,7 +181,7 @@ const error = (ctx: Ctx, node: Locateable, msg: string) => {
     process.exit(1);
 }
 
-const statements = (ctx: Ctx, nodes: Statement[]) => {
+const statements = (ctx: Ctx, nodes: StatementNode[]) => {
     for (const node of nodes)
         if (ctx.shouldReturn)
             break;
@@ -178,10 +189,12 @@ const statements = (ctx: Ctx, nodes: Statement[]) => {
             statement(ctx, node);
 }
 
-const statement = (ctx: Ctx, node: Statement) => {
+const statement = (ctx: Ctx, node: StatementNode) => {
     switch (node.type) {
         case 'block':
             return block(ctx, node);
+        case 'struct_def':
+            return structDef(ctx, node);
         case 'func_def_statement':
             return funcDefStatement(ctx, node);
         case 'let_initialization':
@@ -197,25 +210,35 @@ const statement = (ctx: Ctx, node: Statement) => {
     }
 }
 
-const block = (ctx: Ctx, node: Block) => {
+const block = (ctx: Ctx, node: BlockNode) => {
     statements({...ctx, symbolTable: new SymbolTable(ctx.symbolTable)}, node.body);
 }
 
-const funcDefStatement = (ctx: Ctx, node: FuncDefStatement) => {
+const structDef = (ctx: Ctx, node: StructDefNode) => {
+    if (ctx.symbolTable.existsLocally(node.identifier.value))
+        return error(ctx, node.identifier,
+            `reuse of local identifier '${ctx.symbolTable.get(node.identifier.value)}'`);
+    if (ctx.structs.find(s => s.identifier.value === node.identifier.value))
+        return error(ctx, node.identifier,
+            `reuse of struct identifier '${ctx.symbolTable.get(node.identifier.value)}'`);
+    ctx.structs.push(node);
+}
+
+const funcDefStatement = (ctx: Ctx, node: FuncDefStatementNode) => {
     const identifier = node.definition.identifier;
     if (ctx.symbolTable.existsLocally(identifier.value))
         return error(ctx, identifier,
-            `redeclaration of local function '${ctx.symbolTable.get(identifier.value)}'`);
+            `reuse of local identifier '${ctx.symbolTable.get(identifier.value)}'`);
     const func = new FuncValue(
         node.definition.parameters,
         ctx.symbolTable,
         node.definition.returnType,
         (ctx) => statement(ctx, node.definition.body)
     );
-    ctx.symbolTable.set(node.definition.identifier.value, func);
+    ctx.symbolTable.set(identifier.value, func);
 }
 
-const letInitialization = (ctx: Ctx, node: LetInitialization) => {
+const letInitialization = (ctx: Ctx, node: LetInitializationNode) => {
     const identifier = node.initialization.identifier;
     if (ctx.symbolTable.existsLocally(identifier.value))
         return error(ctx, identifier,
@@ -224,7 +247,7 @@ const letInitialization = (ctx: Ctx, node: LetInitialization) => {
     ctx.symbolTable.set(identifier.value, value);
 }
 
-const letDeclaration = (ctx: Ctx, node: LetDeclaration) => {
+const letDeclaration = (ctx: Ctx, node: LetDeclarationNode) => {
     const identifier = node.declaration.typedIdentifier.identifier;
     if (ctx.symbolTable.existsLocally(identifier.value))
         return error(ctx, identifier,
@@ -241,14 +264,18 @@ const letDeclaration = (ctx: Ctx, node: LetDeclaration) => {
     }
 }
 
-const returnStatement = (ctx: Ctx, node: ReturnStatement) => {
+const returnStatement = (ctx: Ctx, node: ReturnStatementNode) => {
     const value = expression(ctx, node.value);
     ctx.returnValues.push(value);
     ctx.shouldReturn = true;
 }
 
-const expression = (ctx: Ctx, node: Expression): Value => {
+const expression = (ctx: Ctx, node: ExpressionNode): Value => {
     switch (node.type) {
+        case 'member_access':
+            return memberAccess(ctx, node);
+        case 'object_constructor':
+            return objectConstructor(ctx, node);
         case 'function_call': 
             return functionCall(ctx, node);
         case 'name':
@@ -280,7 +307,23 @@ const expression = (ctx: Ctx, node: Expression): Value => {
     }
 }
 
-const functionCall = (ctx: Ctx, node: FunctionCall): Value => {
+const memberAccess = (ctx: Ctx, node: MemberAccessNode): Value => {
+    const parent = expression(ctx, node.parent) as ObjectValue;
+    if (parent.type !== 'object')
+        error(ctx, node, `cannot access members of value type '${node.type}'`);
+    if (!(node.identifier.value in parent.pairs))
+        error(ctx, node, `field '${node.identifier.value}' does not exist on object`);
+    return parent.pairs[node.identifier.value];
+}
+
+const objectConstructor = (ctx: Ctx, node: ObjectConstructorNode): Value => {
+    const values: {[key: string]: Value} = {};
+    for (const pair of node.pairs)
+        values[pair.key.value] = expression(ctx, pair.value);
+    return new ObjectValue(values);
+}
+
+const functionCall = (ctx: Ctx, node: FunctionCallNode): Value => {
     const func = expression(ctx, node.function) as FuncValue;
     if (func.type !== 'func')
         error(ctx, node, `value '${node.function}' is not call-able`);
@@ -336,7 +379,7 @@ const float = (ctx: Ctx, node: Literal): FloatValue => {
     return new FloatValue(value);
 }
 
-const unaryOperation = (ctx: Ctx, node: UnaryOperation): Value => {
+const unaryOperation = (ctx: Ctx, node: UnaryOperationNode): Value => {
     const origin = expression(ctx, node.value) as IntValue | FloatValue;
     if (origin.type !== 'int' && origin.type !== 'float')
         error(ctx, node, `cannot perform unary operation on type '${origin.type}'`);
@@ -354,7 +397,7 @@ const unaryOperation = (ctx: Ctx, node: UnaryOperation): Value => {
         return new FloatValue(value);
 }
 
-const exponentation = (ctx: Ctx, node: ExponentationOperation): Value => {
+const exponentation = (ctx: Ctx, node: ExponentationOperationNode): Value => {
     const left = expression(ctx, node.left) as IntValue | FloatValue;
     const right = expression(ctx, node.right) as IntValue | FloatValue;
     if (left.type !== 'int' && left.type !== 'float')
@@ -367,7 +410,7 @@ const exponentation = (ctx: Ctx, node: ExponentationOperation): Value => {
         return new FloatValue(left.value ** right.value);
 }
 
-const binaryOperation = (ctx: Ctx, node: BinaryOperation): Value => {
+const binaryOperation = (ctx: Ctx, node: BinaryOperationNode): Value => {
     const left = expression(ctx, node.left) as IntValue | FloatValue;
     const right = expression(ctx, node.right) as IntValue | FloatValue;
     if (left.type !== 'int' && left.type !== 'float')
@@ -403,7 +446,7 @@ const binaryOperation = (ctx: Ctx, node: BinaryOperation): Value => {
         return new FloatValue(value);
 }
 
-const assignOperation = (ctx: Ctx, node: AssignOperation): Value => {
+const assignOperation = (ctx: Ctx, node: AssignOperationNode): Value => {
     const left = node.left as Identifier;
     const right = expression(ctx, node.right) as IntValue | FloatValue;
     if (left.type === 'name') {
@@ -430,7 +473,7 @@ const assignOperation = (ctx: Ctx, node: AssignOperation): Value => {
     return right;
 }
 
-const getCalculatedValueToAssign = (origin: IntValue | FloatValue, influencer: IntValue | FloatValue, node: AssignOperation) => {
+const getCalculatedValueToAssign = (origin: IntValue | FloatValue, influencer: IntValue | FloatValue, node: AssignOperationNode) => {
     return matchPrimitive(node.operation?.type ?? null, null, [
         [null,          () => influencer.value],
         ['powerof',     () => origin.value ** influencer.value],

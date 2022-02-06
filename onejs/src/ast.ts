@@ -1,243 +1,246 @@
 
-export type AST = Statement[]
+export type AST = StatementNode[]
 
-export type Statement = 
-    Block | FuncDefStatement | LetInitialization | LetDeclaration | ReturnStatement | ValueStatement
+export type StatementNode = 
+    BlockNode | StructDefNode | MethodDefNode | ConstructorDefNode | DestructorDefNode | DestructorDefNode
+    | StructOperatorDefNode | ForConditionNode | ForIteratorNode | WhileStatementNode | IfElseStatementNode | IfStatementNode
+    | FuncDefStatementNode | LetInitializationNode | LetDeclarationNode | ReturnStatementNode | ValueStatementNode
 
-export type Block = Locateable & {
+export type BlockNode = Locateable & {
     type: 'block',
-    body: Statement[],
+    body: StatementNode[],
 }
 
-export type StructDef = Locateable & {
+export type StructDefNode = Locateable & {
     type: 'struct_def',
     identifier: Identifier,
-    fields: TypedIdentifier[],
+    fields: TypedIdentifierNode[],
 }
 
-export type MethodDef = Locateable & {
+export type MethodDefNode = Locateable & {
     type: 'method_def',
-    structIdentifier: TypedIdentifier,
-    definition: FunctionDefinition,
+    structIdentifier: TypedIdentifierNode,
+    definition: FunctionDefinitionNode,
 }
 
-export type ConstructorDef = Locateable & {
+export type ConstructorDefNode = Locateable & {
     type: 'constructor_def',
-    definition: FunctionDefinition,
+    definition: FunctionDefinitionNode,
 }
 
-export type DestructorDef = Locateable & {
+export type DestructorDefNode = Locateable & {
     type: 'destructor_def',
-    definition: FunctionDefinition,
+    definition: FunctionDefinitionNode,
 }
 
-export type StructOperatorDef = Locateable & {
+export type StructOperatorDefNode = Locateable & {
     type: 'struct_operator_def',
     operator: Token<OperationType>,
-    definition: FunctionDefinition,
+    definition: FunctionDefinitionNode,
 }
 
-export type FuncDefStatement = Locateable & {
+export type FuncDefStatementNode = Locateable & {
     type: 'func_def_statement',
-    definition: FunctionDefinition,
+    definition: FunctionDefinitionNode,
 }
 
-export type FunctionDefinition = Locateable & {
+export type FunctionDefinitionNode = Locateable & {
     type: 'function_definition',
     identifier: Identifier,
-    parameters: TypedIdentifier[],
-    returnType: TypeSpecifier,
-    body: Statement,
+    parameters: TypedIdentifierNode[],
+    returnType: TypeSpecifierNode,
+    body: StatementNode,
 }
 
-export type ForCondition = Locateable & {
+export type ForConditionNode = Locateable & {
     type: 'for_condition',
-    declaration: Statement,
-    condition: Expression,
-    increment: Statement,
-    body: Statement,
+    declaration: StatementNode,
+    condition: ExpressionNode,
+    increment: StatementNode,
+    body: StatementNode,
 }
-
-export type ForIterator = Locateable & {
+ 
+export type ForIteratorNode = Locateable & {
     type: 'for_iterator',
     iteration: Identifier,
-    iterator: Expression,
-    body: Statement,
+    iterator: ExpressionNode,
+    body: StatementNode,
 }
 
-export type WhileStatement = Locateable & {
+export type WhileStatementNode = Locateable & {
     type: 'while_statement',
-    condition: Expression,
-    body: Statement,
+    condition: ExpressionNode,
+    body: StatementNode,
 }
 
-export type IfElseStatement = Locateable & {
+export type IfElseStatementNode = Locateable & {
     type: 'if_else_statement',
-    condition: Expression,
-    truthy: Statement,
-    falsy: Statement,
+    condition: ExpressionNode,
+    truthy: StatementNode,
+    falsy: StatementNode,
 }
 
-export type IfStatement = Locateable & {
+export type IfStatementNode = Locateable & {
     type: 'if_statement',
-    condition: Expression,
-    body: Statement,
+    condition: ExpressionNode,
+    body: StatementNode,
 }
 
-export type LetInitialization = Locateable & {
+export type LetInitializationNode = Locateable & {
     type: 'let_initialization',
-    initialization: Initialization,
+    initialization: InitializationNode,
 }
 
-export type Initialization = Locateable & {
+export type InitializationNode = Locateable & {
     type: 'initialization',
     identifier: Identifier,
-    value: Expression,
+    value: ExpressionNode,
 }
 
-export type LetDeclaration = Locateable & {
+export type LetDeclarationNode = Locateable & {
     type: 'let_declaration',
-    declaration: Declaration,
+    declaration: DeclarationNode,
 }
 
-export type Declaration = Locateable & {
+export type DeclarationNode = Locateable & {
     type: 'declaration',
-    typedIdentifier: TypedIdentifier,
-    value: Expression | null,
+    typedIdentifier: TypedIdentifierNode,
+    value: ExpressionNode | null,
 }
 
-export type TypedIdentifier = Locateable & {
+export type TypedIdentifierNode = Locateable & {
     type: 'typed_identifier',
     identifier: Identifier,
-    typeSpecifier: TypeSpecifier,
+    typeSpecifier: TypeSpecifierNode,
 }
 
-export type TypeSpecifier = Locateable & {
+export type TypeSpecifierNode = Locateable & {
     type: 'type_specifier',
     identifier: Identifier,
 }
 
-export type ReturnStatement = Locateable & {
+export type ReturnStatementNode = Locateable & {
     type: 'return_statement',
-    value: Expression,
+    value: ExpressionNode,
 }
 
-export type ValueStatement = Locateable & {
+export type ValueStatementNode = Locateable & {
     type: 'value_statement',
-    value: Expression,
+    value: ExpressionNode,
 }
 
-export type Expression =
-    InlineFunction | ObjectLiteral | ArrayLiteral
-    | FunctionCall | UnaryOperation | ExponentationOperation
-    | MulDivModOperation | AddSubOperation
-    | BitshiftOperation | ComparisonOperation
-    | BitWiseOperation | LogicalOperation
-    | AssignOperation
+export type ExpressionNode =
+    MemberAccessNode | IndexingNode | InlineFunctionNode
+    | ObjectLiteralNode | ObjectConstructorNode | ArrayLiteralNode | NewNode
+    | FunctionCallNode| DeleteNode | UnaryOperationNode | ExponentationOperationNode
+    | MulDivModOperationNode | AddSubOperationNode
+    | BitshiftOperationNode | ComparisonOperationNode
+    | BitWiseOperationNode | LogicalOperationNode
+    | AssignOperationNode
     | Identifier | Literal
 
-export type MemberAccess = Locateable & {
+export type MemberAccessNode = Locateable & {
     type: 'member_access',
-    parent: Expression,
+    parent: ExpressionNode,
     identifier: Identifier,
 }
 
-export type Indexing = Locateable & {
+export type IndexingNode = Locateable & {
     type: 'indexing',
-    parent: Expression,
-    index: Expression,
+    parent: ExpressionNode,
+    index: ExpressionNode,
 }
 
-export type InlineFunction = Locateable & {
+export type InlineFunctionNode = Locateable & {
     type: 'inline_function',
-    parameters: TypedIdentifier[],
-    returnType: TypeSpecifier | null,
-    value: Expression,
+    parameters: TypedIdentifierNode[],
+    returnType: TypeSpecifierNode | null,
+    value: ExpressionNode,
 }
 
-export type ObjectConstructor = Locateable & {
+export type ObjectConstructorNode = Locateable & {
     type: 'object_constructor',
     struct: Identifier,
-    pairs: KeyValuePair[],
+    pairs: KeyValuePairNode[],
 }
 
-export type ObjectLiteral = Locateable & {
+export type ObjectLiteralNode = Locateable & {
     type: 'object_literal',
-    pairs: KeyValuePair[],
+    pairs: KeyValuePairNode[],
 }
 
-export type KeyValuePair = Locateable & {
+export type KeyValuePairNode = Locateable & {
     type: 'keyvaluepair',
     key: Identifier,
-    value: Expression,
+    value: ExpressionNode,
 }
 
-export type ArrayLiteral = Locateable & {
+export type ArrayLiteralNode = Locateable & {
     type: 'array_literal',
-    values: Expression[],
+    values: ExpressionNode[],
 }
 
-export type New = Locateable & {
+export type NewNode = Locateable & {
     type: 'new',
-    source: Expression,
+    source: ExpressionNode,
 }
 
-export type FunctionCall = Locateable & {
+export type FunctionCallNode = Locateable & {
     type: 'function_call',
-    function: Expression,
-    arguments: Expression[],
+    function: ExpressionNode,
+    arguments: ExpressionNode[],
 }
 
-export type Delete = Locateable & {
+export type DeleteNode = Locateable & {
     type: 'delete',
-    source: Expression,
+    source: ExpressionNode,
 }
 
-export type UnaryOperation = Locateable & {
+export type UnaryOperationNode = Locateable & {
     type: 'unary',
     operator: Token<'log_not' | 'bit_not' | 'plus' | 'minus'>,
-    value: Expression,
+    value: ExpressionNode,
 }
 
-export type BinaryOperation =
-    MulDivModOperation | AddSubOperation | BitshiftOperation
-    | ComparisonOperation | BitWiseOperation| LogicalOperation
+export type BinaryOperationNode =
+    MulDivModOperationNode | AddSubOperationNode | BitshiftOperationNode
+    | ComparisonOperationNode | BitWiseOperationNode| LogicalOperationNode
 
-export type ExponentationOperation = BinaryOperationTrait & {
+export type ExponentationOperationNode = BinaryOperationTrait & {
     type: 'exponentation',
 }
 
-export type MulDivModOperation = BinaryOperationTrait & {
+export type MulDivModOperationNode = BinaryOperationTrait & {
 	type: 'mul_div_mod',
 	operation: Token<'multiply' | 'divide' | 'modulus'>,
 }
 
-export type AddSubOperation = BinaryOperationTrait & {
+export type AddSubOperationNode = BinaryOperationTrait & {
 	type: 'add_sub',
 	operation: Token<'plus' | 'minus'>,
 }
 
-export type BitshiftOperation = BinaryOperationTrait & {
+export type BitshiftOperationNode = BinaryOperationTrait & {
 	type: 'bitshift',
 	operation: Token<'bit_rights' | 'bit_right' | 'bit_left'>,
 }
 
-export type ComparisonOperation = BinaryOperationTrait & {
+export type ComparisonOperationNode = BinaryOperationTrait & {
 	type: 'comparison',
 	operation: Token<'cmp_lt' | 'cmp_gt' | 'cmp_lte' | 'cmp_gte' | 'cmp_e' | 'cmp_ne'>,
 }
 
-export type BitWiseOperation = BinaryOperationTrait & {
+export type BitWiseOperationNode = BinaryOperationTrait & {
 	type: 'bitwise',
 	operation: Token<'bit_and' | 'bit_or' | 'bit_xor'>,
 }
 
-export type LogicalOperation = BinaryOperationTrait & {
+export type LogicalOperationNode = BinaryOperationTrait & {
 	type: 'logical',
 	operation: Token<'log_and' | 'log_or'>,
 }
 
-export type AssignOperation = BinaryOperationTrait & {
+export type AssignOperationNode = BinaryOperationTrait & {
     type: 'assign',
     operation: Token<'plus' | 'minus' | 'multiply' | 'powerof'
         | 'divide' | 'modulus' | 'bit_and' | 'bit_or'
@@ -246,8 +249,8 @@ export type AssignOperation = BinaryOperationTrait & {
 }
 
 export type BinaryOperationTrait = Locateable & {
-    left: Expression,
-    right: Expression,
+    left: ExpressionNode,
+    right: ExpressionNode,
 }
 
 export type Identifier = Token<'name'>

@@ -1,0 +1,16 @@
+
+struct Box {
+    width: int,
+    height: int,
+    depth: int
+}
+
+let cube := Box {
+    width: 1,
+    height: 1,
+    depth: 1
+}
+
+putint(cube.width)
+
+putchar('\n')
