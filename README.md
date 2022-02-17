@@ -54,7 +54,7 @@ clear && make -B && clear && ./onejscli examples/test.one -r --ast
 
 ## Resources
 
-- [Linux X86-64 Syscalls - ChromiumOS](https://chromium.googlesource.com/chromiumos/docs/+/master/constants/syscalls.md)
+- [Linux X86-64 Syscalls - ChromiumOS](https://chromium.googlesource.com/chromiumos/docs/+/HEAD/constants/syscalls.md)
 - [X86-64 Memory - CS UAF](https://www.cs.uaf.edu/courses/cs301/2014-fall/notes/memory/)
 - [Writing a `malloc` - Tsoding](https://www.youtube.com/watch?v=sZ8GJ1TiMdk)
 - [Writing a Garbage Collector - Tsoding](https://www.youtube.com/watch?v=2JgEKEd3tw8&t=1355s)
