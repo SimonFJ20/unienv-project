@@ -1,0 +1,56 @@
+
+
+let a := 5;
+let b := 2;
+
+while (a) {
+    b += 1
+    a -= 1
+}
+
+print("done!\n")
+
+_start:
+    push u32 0          // 0
+    push i32 5          // 5 0
+    storelocal i32      // 
+
+    push u32 4          // 4
+    push i32 2          // 2 4
+    storelocal i32      // 
+
+while0:
+    push u32 0          // 0
+    loadlocal i32       // a
+    push adr endwhile0  // endwhile0 a
+    swap                // a endwhile0
+    jz                  // 
+    
+    push u32 4          // 4
+    loadlocal i32       // b
+    push i32 1          // 1 b
+    add i32             // b
+    push u32 4          // 4 b
+    swap                // b 4
+    storelocal i32      // 
+
+    push u32 0          // 0
+    loadlocal i32       // a
+    push i32 1          // 1 a
+    sub i32             // a
+    push u32 0          // 0 a
+    swap                // a 0
+    storelocal i32      // 
+
+    push adr while0     // while0
+    jmp                 //
+
+endwhile0:
+
+    push adr string0    // string0
+    push adr print      // string0 print
+    call                // 
+
+string0:
+    @db 64 6f 6e 65 21 0a
+

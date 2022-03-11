@@ -1,0 +1,42 @@
+
+
+
+let a := 3
+let b: u16;
+
+if (a - 1) {
+    b = 5
+} else {
+    b = 3
+}
+
+print("done!\n")
+
+// bytecode             stack
+_start:
+    push u32 0          // 0
+    push i32 3          // 3 0
+    storelocal i32      // 
+
+    push u32 0          // 0
+    loadlocal i32       // 3
+    push i32 0          // 0 3
+    sub i32             // 3
+    push adr else0      // else0 3
+    jz                  // 
+
+    push u32 4          // 4
+    push i32 5          // 5 4
+    storelocal i32      // 
+
+else0:
+    push u32 4          // 4
+    push i32 3          // 3 4
+    storelocal i32      // 
+
+    push adr string0    // string0
+    push adr print      // string0 print
+    call                //
+
+string0:
+    @db 64 6f 6e 65 21 0a
