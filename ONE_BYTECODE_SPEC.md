@@ -1,6 +1,16 @@
 
 # ONE Bytecode Specification
 
+## File
+
+File begins with `.ONEBYTECODEFILE` in ASCII.
+
+Consists of continous 64 bytes (512 bits) segments, containing code and data.
+
+Starts execution at 2nd segment.
+
+Ends with a segments containing 64 bytes of `0xFF`.
+
 ## Types
 
 Name | Id
